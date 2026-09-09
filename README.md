@@ -128,6 +128,21 @@ update public.profiles set is_admin = true where email = 'you@example.com';
 
 Reload the site and an **Admin** link appears in the header.
 
+## Layout
+
+The CSS is mobile-first: everything before the first `min-width` query *is* the phone layout,
+and the three breakpoints only ever add — 600px (large phone), 860px (where the bottom tab bar
+gives way to inline nav), 1040px (desktop). Notable phone behavior:
+
+- Navigation is a fixed bottom tab bar with icons; the inline header nav appears from 860px.
+- Form fields are 16px, which is what stops iOS Safari from zooming when one is focused, and
+  touch targets stay at least 44px — they only compact where a fine pointer is detected.
+- The admin and airline tables reflow into stacked, labelled rows instead of scrolling
+  sideways (the labels come from `data-label` on each cell).
+- `env(safe-area-inset-*)` is respected, so nothing hides behind an iPhone's home indicator
+  or notch.
+- The sign-in dialog is a bottom sheet on phones and a centered modal from 600px.
+
 ## Testing the security rules
 
 The row-level security policies are the whole defense, so they have tests that run against a

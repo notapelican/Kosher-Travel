@@ -166,32 +166,70 @@ export function openAuthDialog() {
 
 /* ----------------------------------------------------------------- header */
 
+/** Tab bar / nav destinations. `icon` is a path drawn at 24x24. */
+const NAV = [
+  { href: "index.html", label: "Browse", short: "Browse",
+    icon: "M4 7h16M4 12h16M4 17h10" },
+  { href: "airlines.html", label: "Airlines", short: "Airlines",
+    icon: "M12 3l7 9h-4l-3 9-3-9H5l7-9z" },
+  { href: "submit.html", label: "Rate a meal", short: "Rate",
+    icon: "M12 5v14M5 12h14" },
+  { href: "mine.html", label: "My ratings", short: "Mine", signedIn: true,
+    icon: "M20 21a8 8 0 10-16 0M12 11a4 4 0 100-8 4 4 0 000 8z" },
+  { href: "admin.html", label: "Admin", short: "Admin", adminOnly: true,
+    icon: "M12 3l8 4v6c0 4-3.4 7.2-8 8-4.6-.8-8-4-8-8V7l8-4z" }
+];
+
+function navFor(profile) {
+  return NAV.filter((item) =>
+    (!item.signedIn || profile) && (!item.adminOnly || profile?.is_admin));
+}
+
+function icon(path) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
+}
+
 export async function renderHeader(active) {
   const header = $("#site-header");
   if (!header) return null;
   const profile = isConfigured ? await currentProfile() : null;
-  const link = (href, label) =>
-    `<a class="navlink" href="${href}"${active === href ? ' aria-current="page"' : ""}>${label}</a>`;
+  const items = navFor(profile);
+  const current = (href) => (active === href ? ' aria-current="page"' : "");
 
   header.innerHTML = `
     <div class="wrap">
       <a class="brand" href="index.html">
         <span class="brand-mark" aria-hidden="true">✦</span>${esc(SITE_NAME)}</a>
-      <nav class="nav">
-        ${link("index.html", "Browse")}
-        ${link("airlines.html", "Airlines")}
-        ${link("submit.html", "Rate a meal")}
-        ${profile ? link("mine.html", "My ratings") : ""}
-        ${profile?.is_admin ? link("admin.html", "Admin") : ""}
+      <nav class="nav" aria-label="Main">
+        ${items.map((item) =>
+          `<a class="navlink" href="${item.href}"${current(item.href)}>${esc(item.label)}</a>`).join("")}
+      </nav>
+      <div class="header-account">
         ${profile
           ? `<span class="whoami">${esc(profile.display_name || profile.email)}</span>
              <button class="small" id="nav-signout">Sign out</button>`
           : `<button class="small primary" id="nav-signin">Sign in</button>`}
-      </nav>
+      </div>
     </div>`;
 
   $("#nav-signout", header)?.addEventListener("click", signOut);
   $("#nav-signin", header)?.addEventListener("click", () => openAuthDialog());
+
+  // Bottom tab bar: the primary navigation on phones, hidden from 860px up.
+  let tabbar = $("#tabbar");
+  if (!tabbar) {
+    tabbar = document.createElement("nav");
+    tabbar.id = "tabbar";
+    tabbar.className = "tabbar";
+    tabbar.setAttribute("aria-label", "Main");
+    document.body.append(tabbar);
+  }
+  tabbar.innerHTML = items.map((item) => `
+    <a href="${item.href}"${current(item.href)}>
+      ${icon(item.icon)}<span>${esc(item.short)}</span>
+    </a>`).join("");
+
   return profile;
 }
 

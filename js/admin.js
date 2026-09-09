@@ -131,12 +131,12 @@ async function loadUsers() {
     const self = user.id === profile.id;
     const total = byUser.get(user.id) || 0;
     return `<tr data-user="${esc(user.id)}">
-      <td>${esc(user.display_name || "—")}${self ? " <span class=\"hint\">(you)</span>" : ""}</td>
-      <td>${esc(user.email || "—")}</td>
-      <td>${total}</td>
-      <td>${esc(formatDate(user.created_at))}</td>
-      <td>${user.is_banned ? "Banned" : "Active"}${user.is_admin ? " · Admin" : ""}</td>
-      <td style="white-space:nowrap">
+      <td data-label="">${esc(user.display_name || "—")}${self ? " <span class=\"hint\">(you)</span>" : ""}</td>
+      <td data-label="Email">${esc(user.email || "—")}</td>
+      <td data-label="Ratings">${total}</td>
+      <td data-label="Joined">${esc(formatDate(user.created_at))}</td>
+      <td data-label="Status">${user.is_banned ? "Banned" : "Active"}${user.is_admin ? " · Admin" : ""}</td>
+      <td data-label="" class="cell-actions">
         ${self ? "" : `
           <button class="small" data-ban="${esc(user.id)}" data-banned="${user.is_banned}">
             ${user.is_banned ? "Unban" : "Ban"}</button>

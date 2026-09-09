@@ -80,11 +80,11 @@ function draw() {
 
   body.innerHTML = rows.length
     ? rows.map((a) => `<tr>
-        <td><a href="index.html?q=${encodeURIComponent(a.airline)}">${esc(a.airline)}</a></td>
-        <td>${a.count}</td>
-        ${COLUMNS.map(({ key }) => {
+        <td data-label=""><a href="index.html?q=${encodeURIComponent(a.airline)}">${esc(a.airline)}</a></td>
+        <td data-label="Ratings">${a.count}</td>
+        ${COLUMNS.map(({ key, short }) => {
           const score = a.averages[key];
-          return `<td class="score-cell">${score
+          return `<td class="score-cell" data-label="${esc(short)}">${score
             ? `${stars(score.avg, { fractional: true })} <small>${score.avg.toFixed(1)} from ${score.n}</small>`
             : `<span class="no-data">—</span>`}</td>`;
         }).join("")}
