@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rate a kosher inflight meal — Kosher Travel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🍽️</text></svg>">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+
+<main>
+  <div class="wrap" style="max-width:760px">
+    <div class="page-head">
+      <h1 id="form-title">Rate a kosher meal</h1>
+      <p>Only the airline, the city the meal was loaded in, and a score are required —
+         everything else helps the next traveler.</p>
+    </div>
+
+    <div id="page-notice"></div>
+    <div class="notice" id="form-msg" hidden></div>
+
+    <form class="card" id="review-form" hidden>
+      <div class="grid-2">
+        <div class="field">
+          <label for="airline">Airline <span class="hint">required</span></label>
+          <input id="airline" list="airlines" required autocomplete="off" placeholder="El Al">
+          <datalist id="airlines"></datalist>
+        </div>
+        <div class="field">
+          <label for="flight_number">Flight number</label>
+          <input id="flight_number" autocomplete="off" placeholder="LY 26">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="origin_city">City the meal was loaded in <span class="hint">required</span></label>
+          <input id="origin_city" required autocomplete="off" placeholder="Newark (EWR)">
+        </div>
+        <div class="field">
+          <label for="destination_city">Destination</label>
+          <input id="destination_city" autocomplete="off" placeholder="Tel Aviv (TLV)">
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label for="flight_date">Flight date</label>
+          <input type="date" id="flight_date">
+        </div>
+        <div class="field">
+          <label for="cabin_class">Cabin</label>
+          <select id="cabin_class"></select>
+        </div>
+        <div class="field">
+          <label for="meal_type">Meal</label>
+          <select id="meal_type"></select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="hechsher">Hechsher on the seal</label>
+          <input id="hechsher" list="hechsherim" autocomplete="off" placeholder="Belz Machzikei Hadass">
+          <datalist id="hechsherim"></datalist>
+        </div>
+        <div class="field">
+          <label for="meal_name">What was it? <span class="hint">e.g. chicken and rice</span></label>
+          <input id="meal_name" autocomplete="off" placeholder="Grilled chicken, rice, cold salad">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rating">Score <span class="hint">1 = inedible, 5 = genuinely good</span></label>
+        <select id="rating" required>
+          <option value="">Pick a score</option>
+          <option value="5">★★★★★ — genuinely good</option>
+          <option value="4">★★★★ — solid</option>
+          <option value="3">★★★ — fine, ate it</option>
+          <option value="2">★★ — rough</option>
+          <option value="1">★ — inedible</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="comment">Notes</label>
+        <textarea id="comment" maxlength="4000"
+          placeholder="Was it served hot? Sealed? Did the crew know where it was? Anything the next traveler should know."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="photos">Photos <span class="hint">up to 4, resized in your browser before upload</span></label>
+        <input type="file" id="photos" accept="image/*" multiple>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+
+      <button type="submit" class="primary" id="submit-btn">Post rating</button>
+      <a class="btn" href="index.html" id="cancel-link" hidden style="margin-left:8px">Cancel</a>
+    </form>
+
+    <div class="card" id="signin-gate" hidden style="text-align:center">
+      <h2 style="margin-top:0">Sign in to post a rating</h2>
+      <p style="color:var(--muted)">Accounts keep spam out. You can rate as many meals as you like —
+         including several on the same flight.</p>
+      <button class="primary" id="gate-signin">Sign in</button>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">Please only upload photos you took yourself.</div>
+</footer>
+
+<script type="module" src="js/submit.js"></script>
+</body>
+</html>

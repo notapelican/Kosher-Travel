@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My ratings — Kosher Travel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🍽️</text></svg>">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+<main>
+  <div class="wrap">
+    <div class="page-head">
+      <h1>My ratings</h1>
+      <p>Edit or delete anything you have posted.</p>
+    </div>
+    <div id="page-notice"></div>
+    <div class="notice" id="list-msg" hidden></div>
+
+    <div class="card" id="name-card" hidden style="margin-bottom:20px">
+      <form id="name-form" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+        <div class="field" style="margin:0;flex:1;min-width:220px">
+          <label for="display_name">Display name <span class="hint">shown on your ratings</span></label>
+          <input id="display_name" maxlength="60">
+        </div>
+        <button type="submit">Save name</button>
+      </form>
+    </div>
+
+    <div class="reviews" id="reviews"></div>
+  </div>
+</main>
+<footer class="site-footer"><div class="wrap">Kosher Travel</div></footer>
+<script type="module" src="js/mine.js"></script>
+</body>
+</html>

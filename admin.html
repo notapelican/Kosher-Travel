@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Kosher Travel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🍽️</text></svg>">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+<main>
+  <div class="wrap">
+    <div class="page-head">
+      <h1>Admin</h1>
+      <p>Edit, hide or delete any rating, and manage who can post.</p>
+    </div>
+
+    <div id="page-notice"></div>
+    <div class="notice" id="admin-msg" hidden></div>
+
+    <div id="admin-body" hidden>
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tab-reviews" aria-selected="true" aria-controls="panel-reviews">Ratings</button>
+        <button role="tab" id="tab-users" aria-selected="false" aria-controls="panel-users">Users</button>
+      </div>
+
+      <section id="panel-reviews" role="tabpanel" aria-labelledby="tab-reviews">
+        <form class="filters" id="admin-filters" style="grid-template-columns:2fr 1fr auto">
+          <div>
+            <label for="a-q">Search ratings</label>
+            <input type="search" id="a-q" placeholder="airline, city, hechsher, text">
+          </div>
+          <div>
+            <label for="a-visibility">Show</label>
+            <select id="a-visibility">
+              <option value="all">Everything</option>
+              <option value="visible">Visible only</option>
+              <option value="hidden">Hidden only</option>
+            </select>
+          </div>
+          <div><button type="reset">Clear</button></div>
+        </form>
+        <div class="reviews" id="reviews"></div>
+      </section>
+
+      <section id="panel-users" role="tabpanel" aria-labelledby="tab-users" hidden>
+        <div class="card table-scroll">
+          <table class="admin">
+            <thead>
+              <tr><th>User</th><th>Email</th><th>Ratings</th><th>Joined</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody id="users-body"></tbody>
+          </table>
+        </div>
+        <p class="hint" style="margin-top:12px">
+          Banning blocks new posts and photo uploads immediately. Deleting a user's ratings is permanent.
+          Fully deleting the login itself is done from the Supabase dashboard under Authentication → Users.
+        </p>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="site-footer"><div class="wrap">Kosher Travel admin</div></footer>
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>
