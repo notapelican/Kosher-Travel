@@ -52,7 +52,7 @@ async function loadReviews() {
   if (q) {
     const term = `%${q.replace(/[,()]/g, " ")}%`;
     query = query.or(
-      ["airline", "flight_number", "origin_city", "destination_city", "meal_name", "hechsher", "comment", "author_name"]
+      ["airline", "flight_number", "origin_city", "destination_city", "meal_name", "hechsher", "comment", "experience_notes", "author_name"]
         .map((col) => `${col}.ilike.${term}`).join(",")
     );
   }

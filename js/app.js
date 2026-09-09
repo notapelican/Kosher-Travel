@@ -222,15 +222,17 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
     .join("");
 
   const scored = EXPERIENCE_SCORES.filter(({ key }) => review[key]);
-  const subscores = scored.length
-    ? `<div class="subscores">${scored.map(({ key, label }) =>
-        `<div class="subscore"><span>${esc(label)}</span>${stars(review[key])}</div>`).join("")}
-       ${review.experience_notes
-          ? `<p class="experience-notes">${esc(review.experience_notes)}</p>` : ""}
-      </div>`
-    : review.experience_notes
-      ? `<div class="subscores"><p class="experience-notes">${esc(review.experience_notes)}</p></div>`
-      : "";
+  // The experience block stands on its own: a reviewer may leave scores, a
+  // write-up, or both.
+  const experience = (scored.length || review.experience_notes)
+    ? `<div class="subscores">
+         <div class="subscores-head">The travel experience</div>
+         ${scored.map(({ key, label }) =>
+            `<div class="subscore"><span>${esc(label)}</span>${stars(review[key])}</div>`).join("")}
+         ${review.experience_notes
+            ? `<p class="experience-notes">${esc(review.experience_notes)}</p>` : ""}
+       </div>`
+    : "";
 
   const title = [review.airline, review.flight_number].filter(Boolean).join(" ");
   const byline = review.is_anonymous ? "Anonymous" : (review.author_name || "Traveler");
@@ -247,7 +249,7 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
       </div>
       <div class="meta">${tags}</div>
       ${review.comment ? `<p class="comment">${esc(review.comment)}</p>` : ""}
-      ${subscores}
+      ${experience}
       ${photos ? `<div class="photos">${photos}</div>` : ""}
       <div class="byline">${esc(byline)}${bylineNote ? ` <span class="hint">${esc(bylineNote)}</span>` : ""} · ${esc(formatDate(review.created_at))}</div>
       ${review.is_hidden ? `<div class="hidden-flag">Hidden from the public list</div>` : ""}

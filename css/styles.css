@@ -33,6 +33,10 @@
 
 * { box-sizing: border-box; }
 
+/* Several rules below set display on elements that are toggled with the hidden
+   attribute (.btn, .stat-row), and that would otherwise win. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -318,4 +322,13 @@ dialog.lightbox::backdrop { background: rgba(0, 0, 0, .78); }
   position: absolute; left: 0; top: 0;
   overflow: hidden; white-space: nowrap;
   color: var(--star);
+}
+
+.subscores-head {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 2px;
 }

@@ -74,7 +74,7 @@ function buildQuery({ q, airline, hechsher, sort }, from, to) {
     // PostgREST `or` takes a comma-separated list, so strip commas from input.
     const term = `%${q.replace(/[,()]/g, " ")}%`;
     query = query.or(
-      ["airline", "flight_number", "origin_city", "destination_city", "meal_name", "hechsher", "comment"]
+      ["airline", "flight_number", "origin_city", "destination_city", "meal_name", "hechsher", "comment", "experience_notes"]
         .map((col) => `${col}.ilike.${term}`)
         .join(",")
     );

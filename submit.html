@@ -72,36 +72,42 @@
         </div>
       </div>
 
-      <div class="field">
-        <label for="rating">Score <span class="hint">1 = inedible, 5 = genuinely good</span></label>
-        <select id="rating" required>
-          <option value="">Pick a score</option>
-          <option value="5">★★★★★ — genuinely good</option>
-          <option value="4">★★★★ — solid</option>
-          <option value="3">★★★ — fine, ate it</option>
-          <option value="2">★★ — rough</option>
-          <option value="1">★ — inedible</option>
-        </select>
-      </div>
+      <fieldset class="fieldset">
+        <legend>The meal</legend>
+        <span class="hint">A score and, if you have more to say, the story.</span>
 
-      <div class="field">
-        <label for="comment">Notes</label>
-        <textarea id="comment" maxlength="4000"
-          placeholder="Was it served hot? Sealed? Did the crew know where it was? Anything the next traveler should know."></textarea>
-      </div>
+        <div class="field">
+          <label for="rating">Meal score <span class="hint">required · 1 = inedible, 5 = genuinely good</span></label>
+          <select id="rating" required>
+            <option value="">Pick a score</option>
+            <option value="5">★★★★★ — genuinely good</option>
+            <option value="4">★★★★ — solid</option>
+            <option value="3">★★★ — fine, ate it</option>
+            <option value="2">★★ — rough</option>
+            <option value="1">★ — inedible</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="comment">About the meal <span class="hint">optional</span></label>
+          <textarea id="comment" maxlength="4000"
+            placeholder="Was it served hot? Still sealed? Did the crew know where it was? What was actually in the tray, and would you eat it again?"></textarea>
+        </div>
+      </fieldset>
 
       <fieldset class="fieldset">
-        <legend>How did the airline treat you as a Jewish traveler?</legend>
-        <span class="hint">Both optional — leave a score blank if you would rather not say or
-          nothing stood out. These are averaged per airline on the
-          <a href="airlines.html">airlines page</a>.</span>
+        <legend>The travel experience</legend>
+        <span class="hint">How the airline treated you as a Jewish traveler. Everything here is
+          optional, and the scores and the write-up are independent — score both, score neither
+          and just write, or write nothing at all. Scores are averaged per airline on the
+          <a href="airlines.html">airlines page</a>; the write-up appears on your rating.</span>
 
         <div class="grid-2" id="experience-fields"></div>
 
         <div class="field">
-          <label for="experience_notes">Anything specific?
-            <span class="hint">e.g. crew found the meal immediately, or gave you trouble for davening</span></label>
-          <textarea id="experience_notes" maxlength="2000" style="min-height:70px"></textarea>
+          <label for="experience_notes">About the experience <span class="hint">optional</span></label>
+          <textarea id="experience_notes" maxlength="4000" style="min-height:120px"
+            placeholder="What happened, in your words. How did the crew handle the kosher meal and the request itself? Were you able to daven, put on tefillin, or move seats without friction? Anything at check-in, boarding, or the gate. Write as much as you want — this is the part other travelers read."></textarea>
         </div>
       </fieldset>
 

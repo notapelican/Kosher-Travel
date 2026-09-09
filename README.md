@@ -26,12 +26,15 @@ supabase/migrations/      changes to apply to an already-deployed database
 
 ## What a rating records
 
-Required: airline, the city the meal was loaded in, and a 1–5 meal score. Everything else is
-optional — flight number, destination, date, cabin, meal type, what it actually was, the
-hechsher on the seal, notes, and up to four photos.
+The form is in two halves, each with a score and a write-up.
 
-Two further optional scores cover how the airline treats Jewish passengers, kept separate
-because they are different questions:
+**The meal.** Required: airline, the city the meal was loaded in, and a 1–5 meal score. Then
+an optional write-up about the meal itself, plus flight number, destination, date, cabin, meal
+type, what it actually was, the hechsher on the seal, and up to four photos.
+
+**The travel experience** — how the airline treated you as a Jewish traveler. Entirely
+optional, and its scores and its write-up are independent: score both, score neither and just
+write, or skip it. Two scores, kept separate because they are different questions:
 
 | Score | What it asks |
 | --- | --- |
@@ -39,8 +42,11 @@ because they are different questions:
 | **Kosher & observance handling** | Did they get the kosher meal right and take religious practice in stride — davening, tefillin, bringing your own food, a seat change? |
 
 Both default to "Rather not say" so nobody is pushed into scoring something they did not
-observe, and there is a free-text box for specifics. `airlines.html` averages each score per
-airline and shows how many reports it rests on, since one report is one person's experience.
+observe — a written account with no scores at all is a perfectly good rating, and it is the
+part other travelers actually read. `airlines.html` averages each score per airline and shows
+how many reports it rests on, since one report is one person's experience.
+
+Both write-ups are searchable from the browse page.
 
 The exact wording of these scores, including each point on the 1–5 scale, lives in
 `EXPERIENCE_SCORES` in [`js/options.js`](js/options.js) — change it there and the form, the
