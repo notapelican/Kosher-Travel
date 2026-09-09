@@ -120,24 +120,23 @@ export function openAuthDialog() {
   if (!dialog) {
     dialog = document.createElement("dialog");
     dialog.id = "auth-dialog";
-    dialog.className = "card";
-    dialog.style.maxWidth = "400px";
+    dialog.className = "sheet";
     dialog.innerHTML = `
-      <h2 style="margin:0 0 6px;font-size:22px">Sign in</h2>
+      <h2 style="margin:0 0 6px">Sign in</h2>
       <p style="margin:0 0 18px;color:var(--muted);font-size:14px">
         Ratings are tied to an account so we can keep out spam. Rate as many meals as you like.
       </p>
-      <button class="primary" id="auth-google" style="width:100%">Continue with Google</button>
+      <button class="primary block" id="auth-google">Continue with Google</button>
       <div style="text-align:center;color:var(--muted);font-size:12px;margin:14px 0">or</div>
       <form id="auth-email-form">
         <div class="field">
           <label for="auth-email">Email a sign-in link</label>
           <input type="email" id="auth-email" required placeholder="you@example.com" autocomplete="email">
         </div>
-        <button type="submit" style="width:100%">Send link</button>
+        <button type="submit" class="block">Send link</button>
       </form>
       <div class="notice" id="auth-msg" hidden style="margin:14px 0 0"></div>
-      <button id="auth-cancel" style="width:100%;margin-top:14px;border:none;background:none;color:var(--muted)">Cancel</button>`;
+      <button id="auth-cancel" class="ghost block" style="margin-top:14px">Cancel</button>`;
     document.body.append(dialog);
   }
   const msg = $("#auth-msg", dialog);
@@ -176,7 +175,8 @@ export async function renderHeader(active) {
 
   header.innerHTML = `
     <div class="wrap">
-      <a class="brand" href="index.html"><span aria-hidden="true">🍽️</span> ${esc(SITE_NAME)}</a>
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">✦</span>${esc(SITE_NAME)}</a>
       <nav class="nav">
         ${link("index.html", "Browse")}
         ${link("airlines.html", "Airlines")}
@@ -218,17 +218,21 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
 
   const photos = (review.photos || [])
     .map((p) => `<img src="${esc(photoUrl(p))}" alt="Photo of the meal" loading="lazy"
-                      data-full="${esc(photoUrl(p))}">`)
+                      decoding="async" data-full="${esc(photoUrl(p))}">`)
     .join("");
 
   const scored = EXPERIENCE_SCORES.filter(({ key }) => review[key]);
-  // The experience block stands on its own: a reviewer may leave scores, a
+  // The experience panel stands on its own: a reviewer may leave scores, a
   // write-up, or both.
   const experience = (scored.length || review.experience_notes)
     ? `<div class="subscores">
          <div class="subscores-head">The travel experience</div>
-         ${scored.map(({ key, label }) =>
-            `<div class="subscore"><span>${esc(label)}</span>${stars(review[key])}</div>`).join("")}
+         ${scored.map(({ key, label }) => `
+           <div class="subscore">
+             <span>${esc(label)}</span>
+             <span class="meter"><i style="width:${(review[key] / 5) * 100}%"></i></span>
+             <span class="val">${esc(review[key])}<span class="hint">/5</span></span>
+           </div>`).join("")}
          ${review.experience_notes
             ? `<p class="experience-notes">${esc(review.experience_notes)}</p>` : ""}
        </div>`
@@ -239,19 +243,23 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
 
   return `
     <article class="review" data-id="${esc(review.id)}">
-      <div>
-        <h3>${esc(title || "Unknown flight")}</h3>
-        <div class="route">${esc(route)}${review.meal_name ? ` · ${esc(review.meal_name)}` : ""}</div>
+      <div class="review-top">
+        <div>
+          <h3>${esc(title || "Unknown flight")}</h3>
+          <div class="route">${esc(route)}${
+            review.meal_name ? `<span class="sep">·</span>${esc(review.meal_name)}` : ""}</div>
+        </div>
+        <div class="score-badge">
+          ${stars(review.rating)}
+          <div class="num">${esc(review.rating)}<small>/5 meal</small></div>
+        </div>
       </div>
-      <div class="rating-cell">
-        ${stars(review.rating)}
-        <div class="num">Meal ${esc(review.rating)}/5</div>
-      </div>
-      <div class="meta">${tags}</div>
+      ${tags ? `<div class="meta">${tags}</div>` : ""}
       ${review.comment ? `<p class="comment">${esc(review.comment)}</p>` : ""}
       ${experience}
       ${photos ? `<div class="photos">${photos}</div>` : ""}
-      <div class="byline">${esc(byline)}${bylineNote ? ` <span class="hint">${esc(bylineNote)}</span>` : ""} · ${esc(formatDate(review.created_at))}</div>
+      <div class="byline"><b>${esc(byline)}</b>${
+        bylineNote ? ` <span class="hint">${esc(bylineNote)}</span>` : ""} · ${esc(formatDate(review.created_at))}</div>
       ${review.is_hidden ? `<div class="hidden-flag">Hidden from the public list</div>` : ""}
       ${actions ? `<div class="row-actions">${actions}</div>` : ""}
     </article>`;

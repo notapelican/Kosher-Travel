@@ -1,6 +1,6 @@
 import {
   supabase, isConfigured, renderHeader, renderSetupWarning,
-  openAuthDialog, notify, fillDatalist, fillSelect, photoUrl, PHOTO_BUCKET, $, esc
+  openAuthDialog, notify, fillDatalist, fillSelect, photoUrl, PHOTO_BUCKET, stars, $, $$, esc
 } from "./app.js";
 import { AIRLINES, HECHSHERIM, MEAL_TYPES, CABIN_CLASSES, EXPERIENCE_SCORES } from "./options.js";
 
@@ -58,9 +58,68 @@ async function init() {
 
   form.hidden = false;
   wireBylineChoice();
+  wireAccordions();
 
   const id = new URLSearchParams(location.search).get("edit");
   if (id) await loadForEdit(id);
+}
+
+/**
+ * Keeps each accordion summary showing what is inside it, so a collapsed
+ * section still tells you whether you filled it in — and makes sure a
+ * required field can never be hidden when the browser validates the form.
+ */
+function wireAccordions() {
+  const sections = $$(".accordion");
+
+  const refresh = () => {
+    const rating = $("#rating").value;
+    setState("#state-meal", rating
+      ? `${stars(rating)}<span class="label-text">${photoLabel()}</span>`
+      : `<span class="label-text">Not scored yet</span>`, Boolean(rating));
+
+    const scores = EXPERIENCE_SCORES.filter(({ key }) => $(`#${key}`).value).length;
+    const written = $("#experience_notes").value.trim().length > 0;
+    const parts = [];
+    if (scores) parts.push(`${scores} of 2 scored`);
+    if (written) parts.push("written");
+    setState("#state-experience",
+      `<span class="label-text">${parts.join(" · ") || "Nothing yet"}</span>`,
+      parts.length > 0);
+
+    setState("#state-byline",
+      `<span class="label-text">${$("#post_as").value === "anon"
+        ? "Anonymous"
+        : esc(profile.display_name?.trim() || "Traveler")}</span>`, false);
+  };
+
+  const photoLabel = () =>
+    attachments.length ? ` · ${attachments.length} photo${attachments.length > 1 ? "s" : ""}` : "";
+
+  form.addEventListener("input", refresh);
+  form.addEventListener("change", refresh);
+  drawThumbs.onchange = refresh;
+  refresh();
+
+  // A required control inside a closed <details> cannot be focused, so the
+  // browser would block submission with no visible explanation. Open
+  // everything first, and re-open whatever a validation error lands in.
+  $("#submit-btn").addEventListener("click", () => {
+    for (const section of sections) section.open = true;
+  });
+  for (const control of $$("#review-form input, #review-form select, #review-form textarea")) {
+    control.addEventListener("invalid", () => {
+      const section = control.closest(".accordion");
+      if (section) section.open = true;
+    });
+  }
+}
+
+function setState(selector, html, isSet) {
+  const target = $(selector);
+  if (!target) return;
+  target.innerHTML = html;
+  target.classList.toggle("is-set", Boolean(isSet));
 }
 
 function wireBylineChoice() {
@@ -132,6 +191,7 @@ $("#photos").addEventListener("change", async (event) => {
 });
 
 function drawThumbs() {
+  drawThumbs.onchange?.();
   thumbs.innerHTML = attachments
     .map((a, i) => `<div class="thumb">
         <img src="${esc(a.url)}" alt="Selected meal photo ${i + 1}">

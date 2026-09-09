@@ -23,7 +23,8 @@ if (params.get("q")) $("#f-q").value = params.get("q");
 
 if (!isConfigured) {
   renderSetupWarning();
-  list.innerHTML = `<div class="empty">Connect a Supabase project to see ratings.</div>`;
+  list.innerHTML = `<div class="empty"><b>Not connected</b>
+    Add your Supabase project details to see ratings.</div>`;
 } else {
   loadFacets();
   // The confirmation goes up after the first page loads, which clears notices.
@@ -128,8 +129,9 @@ async function loadPage() {
   moreBtn.hidden = data.length < PAGE_SIZE;
 
   if (!list.children.length) {
-    list.innerHTML = `<div class="empty">No ratings match that yet.
-      <a href="submit.html">Be the first to add one.</a></div>`;
+    list.innerHTML = `<div class="empty">
+      <b>Nothing here yet</b>
+      No ratings match that. <a href="submit.html">Add the first one.</a></div>`;
   }
 }
 

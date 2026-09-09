@@ -26,11 +26,15 @@ supabase/migrations/      changes to apply to an already-deployed database
 
 ## What a rating records
 
-The form is in two halves, each with a score and a write-up.
+The form is one always-visible card for the flight, then three collapsible sections. Each
+collapsed section still summarizes itself in its header ("★★★★ · 2 photos", "1 of 2 scored ·
+written"), so nothing you filled in is hidden from you. A required field can never be trapped
+in a closed section: submitting opens all of them first.
 
-**The meal.** Required: airline, the city the meal was loaded in, and a 1–5 meal score. Then
-an optional write-up about the meal itself, plus flight number, destination, date, cabin, meal
-type, what it actually was, the hechsher on the seal, and up to four photos.
+**The meal.** A required 1–5 score, the hechsher on the seal, what it actually was, an
+optional write-up, and up to four photos of the tray — photos live here rather than at the
+bottom of the form, since they are pictures of the meal. (Airline and the city the meal was
+loaded in are required too, and sit in the flight card above.)
 
 **The travel experience** — how the airline treated you as a Jewish traveler. Entirely
 optional, and its scores and its write-up are independent: score both, score neither and just

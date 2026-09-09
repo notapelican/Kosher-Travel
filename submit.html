@@ -11,7 +11,7 @@
 <header class="site-header" id="site-header"></header>
 
 <main>
-  <div class="wrap" style="max-width:760px">
+  <div class="wrap wrap-narrow">
     <div class="page-head">
       <h1 id="form-title">Rate a kosher meal</h1>
       <p>Only the airline, the city the meal was loaded in, and a score are required —
@@ -21,122 +21,156 @@
     <div id="page-notice"></div>
     <div class="notice" id="form-msg" hidden></div>
 
-    <form class="card" id="review-form" hidden>
-      <div class="grid-2">
-        <div class="field">
-          <label for="airline">Airline <span class="hint">required</span></label>
-          <input id="airline" list="airlines" required autocomplete="off" placeholder="El Al">
-          <datalist id="airlines"></datalist>
+    <form id="review-form" hidden>
+
+      <div class="card" style="margin-bottom:var(--sp-4)">
+        <h2 style="font-size:15.5px;margin-bottom:var(--sp-4)">The flight</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label for="airline">Airline <span class="hint">required</span></label>
+            <input id="airline" list="airlines" required autocomplete="off" placeholder="El Al">
+            <datalist id="airlines"></datalist>
+          </div>
+          <div class="field">
+            <label for="flight_number">Flight number</label>
+            <input id="flight_number" autocomplete="off" placeholder="LY 26">
+          </div>
         </div>
-        <div class="field">
-          <label for="flight_number">Flight number</label>
-          <input id="flight_number" autocomplete="off" placeholder="LY 26">
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="origin_city">City the meal was loaded in <span class="hint">required</span></label>
+            <input id="origin_city" required autocomplete="off" placeholder="Newark (EWR)">
+          </div>
+          <div class="field">
+            <label for="destination_city">Destination</label>
+            <input id="destination_city" autocomplete="off" placeholder="Tel Aviv (TLV)">
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="field">
+            <label for="flight_date">Flight date</label>
+            <input type="date" id="flight_date">
+          </div>
+          <div class="field">
+            <label for="cabin_class">Cabin</label>
+            <select id="cabin_class"></select>
+          </div>
+          <div class="field">
+            <label for="meal_type">Meal</label>
+            <select id="meal_type"></select>
+          </div>
         </div>
       </div>
 
-      <div class="grid-2">
-        <div class="field">
-          <label for="origin_city">City the meal was loaded in <span class="hint">required</span></label>
-          <input id="origin_city" required autocomplete="off" placeholder="Newark (EWR)">
+      <details class="accordion" id="acc-meal" open>
+        <summary>
+          <span>
+            <span class="accordion-title">The meal</span>
+            <span class="accordion-sub">Score it, describe it, add photos</span>
+          </span>
+          <span class="accordion-state" id="state-meal"></span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="grid-2">
+            <div class="field">
+              <label for="rating">Meal score <span class="hint">required</span></label>
+              <select id="rating" required>
+                <option value="">Pick a score</option>
+                <option value="5">★★★★★ — genuinely good</option>
+                <option value="4">★★★★ — solid</option>
+                <option value="3">★★★ — fine, ate it</option>
+                <option value="2">★★ — rough</option>
+                <option value="1">★ — inedible</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="hechsher">Hechsher on the seal</label>
+              <input id="hechsher" list="hechsherim" autocomplete="off" placeholder="Belz Machzikei Hadass">
+              <datalist id="hechsherim"></datalist>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="meal_name">What was it? <span class="hint">e.g. chicken and rice</span></label>
+            <input id="meal_name" autocomplete="off" placeholder="Grilled chicken, rice, cold salad">
+          </div>
+
+          <div class="field">
+            <label for="comment">About the meal <span class="hint">optional</span></label>
+            <textarea id="comment" maxlength="4000"
+              placeholder="Was it served hot? Still sealed? Did the crew know where it was? What was actually in the tray, and would you eat it again?"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="photos">Photos of the meal
+              <span class="hint">up to 4, resized in your browser before upload</span></label>
+            <input type="file" id="photos" accept="image/*" multiple>
+            <div class="thumbs" id="thumbs"></div>
+          </div>
         </div>
-        <div class="field">
-          <label for="destination_city">Destination</label>
-          <input id="destination_city" autocomplete="off" placeholder="Tel Aviv (TLV)">
+      </details>
+
+      <details class="accordion" id="acc-experience">
+        <summary>
+          <span>
+            <span class="accordion-title">The travel experience</span>
+            <span class="accordion-sub">How the airline treated you as a Jewish traveler — optional</span>
+          </span>
+          <span class="accordion-state" id="state-experience"></span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <p class="hint" style="margin-bottom:var(--sp-4)">
+            The scores and the write-up are independent — score both, score neither and just write,
+            or skip this whole section. Scores are averaged per airline on the
+            <a href="airlines.html">airlines page</a>; the write-up appears on your rating.
+          </p>
+
+          <div class="grid-2" id="experience-fields"></div>
+
+          <div class="field">
+            <label for="experience_notes">About the experience <span class="hint">optional</span></label>
+            <textarea id="experience_notes" maxlength="4000" style="min-height:130px"
+              placeholder="What happened, in your words. How did the crew handle the kosher meal and the request itself? Were you able to daven, put on tefillin, or move seats without friction? Anything at check-in, boarding, or the gate. Write as much as you want — this is the part other travelers read."></textarea>
+          </div>
         </div>
+      </details>
+
+      <details class="accordion" id="acc-byline">
+        <summary>
+          <span>
+            <span class="accordion-title">How this is signed</span>
+            <span class="accordion-sub">Your display name, or anonymous</span>
+          </span>
+          <span class="accordion-state" id="state-byline"></span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="field">
+            <label for="post_as">Byline</label>
+            <select id="post_as">
+              <option value="name">Post as my display name</option>
+              <option value="anon">Post anonymously</option>
+            </select>
+            <span class="hint" id="post-as-hint"></span>
+          </div>
+        </div>
+      </details>
+
+      <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap">
+        <button type="submit" class="primary" id="submit-btn">Post rating</button>
+        <a class="btn ghost" href="index.html" id="cancel-link" hidden>Cancel</a>
       </div>
-
-      <div class="grid-3">
-        <div class="field">
-          <label for="flight_date">Flight date</label>
-          <input type="date" id="flight_date">
-        </div>
-        <div class="field">
-          <label for="cabin_class">Cabin</label>
-          <select id="cabin_class"></select>
-        </div>
-        <div class="field">
-          <label for="meal_type">Meal</label>
-          <select id="meal_type"></select>
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="field">
-          <label for="hechsher">Hechsher on the seal</label>
-          <input id="hechsher" list="hechsherim" autocomplete="off" placeholder="Belz Machzikei Hadass">
-          <datalist id="hechsherim"></datalist>
-        </div>
-        <div class="field">
-          <label for="meal_name">What was it? <span class="hint">e.g. chicken and rice</span></label>
-          <input id="meal_name" autocomplete="off" placeholder="Grilled chicken, rice, cold salad">
-        </div>
-      </div>
-
-      <fieldset class="fieldset">
-        <legend>The meal</legend>
-        <span class="hint">A score and, if you have more to say, the story.</span>
-
-        <div class="field">
-          <label for="rating">Meal score <span class="hint">required · 1 = inedible, 5 = genuinely good</span></label>
-          <select id="rating" required>
-            <option value="">Pick a score</option>
-            <option value="5">★★★★★ — genuinely good</option>
-            <option value="4">★★★★ — solid</option>
-            <option value="3">★★★ — fine, ate it</option>
-            <option value="2">★★ — rough</option>
-            <option value="1">★ — inedible</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="comment">About the meal <span class="hint">optional</span></label>
-          <textarea id="comment" maxlength="4000"
-            placeholder="Was it served hot? Still sealed? Did the crew know where it was? What was actually in the tray, and would you eat it again?"></textarea>
-        </div>
-      </fieldset>
-
-      <fieldset class="fieldset">
-        <legend>The travel experience</legend>
-        <span class="hint">How the airline treated you as a Jewish traveler. Everything here is
-          optional, and the scores and the write-up are independent — score both, score neither
-          and just write, or write nothing at all. Scores are averaged per airline on the
-          <a href="airlines.html">airlines page</a>; the write-up appears on your rating.</span>
-
-        <div class="grid-2" id="experience-fields"></div>
-
-        <div class="field">
-          <label for="experience_notes">About the experience <span class="hint">optional</span></label>
-          <textarea id="experience_notes" maxlength="4000" style="min-height:120px"
-            placeholder="What happened, in your words. How did the crew handle the kosher meal and the request itself? Were you able to daven, put on tefillin, or move seats without friction? Anything at check-in, boarding, or the gate. Write as much as you want — this is the part other travelers read."></textarea>
-        </div>
-      </fieldset>
-
-      <div class="field">
-        <label for="photos">Photos <span class="hint">up to 4, resized in your browser before upload</span></label>
-        <input type="file" id="photos" accept="image/*" multiple>
-        <div class="thumbs" id="thumbs"></div>
-      </div>
-
-      <fieldset class="fieldset">
-        <legend>How should this be signed?</legend>
-        <div class="field">
-          <label for="post_as">Byline</label>
-          <select id="post_as">
-            <option value="name">Post as my display name</option>
-            <option value="anon">Post anonymously</option>
-          </select>
-          <span class="hint" id="post-as-hint"></span>
-        </div>
-      </fieldset>
-
-      <button type="submit" class="primary" id="submit-btn">Post rating</button>
-      <a class="btn" href="index.html" id="cancel-link" hidden style="margin-left:8px">Cancel</a>
     </form>
 
     <div class="card" id="signin-gate" hidden style="text-align:center">
-      <h2 style="margin-top:0">Sign in to post a rating</h2>
-      <p style="color:var(--muted)">Accounts keep spam out. You can rate as many meals as you like —
-         including several on the same flight.</p>
+      <h2>Sign in to post a rating</h2>
+      <p style="color:var(--muted);margin:8px auto var(--sp-4);max-width:44ch">
+        Accounts keep spam out. You can rate as many meals as you like — including several on
+        the same flight.</p>
       <button class="primary" id="gate-signin">Sign in</button>
     </div>
   </div>
