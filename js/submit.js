@@ -2,7 +2,7 @@ import {
   supabase, isConfigured, renderHeader, renderSetupWarning,
   openAuthDialog, notify, fillDatalist, fillSelect, photoUrl, PHOTO_BUCKET, $, esc
 } from "./app.js";
-import { AIRLINES, HECHSHERIM, MEAL_TYPES, CABIN_CLASSES } from "./options.js";
+import { AIRLINES, HECHSHERIM, MEAL_TYPES, CABIN_CLASSES, EXPERIENCE_SCORES } from "./options.js";
 
 const form = $("#review-form");
 const gate = $("#signin-gate");
@@ -16,6 +16,17 @@ const JPEG_QUALITY = 0.82;
 let attachments = [];
 let editingId = null;
 let profile = null;
+
+$("#experience-fields").innerHTML = EXPERIENCE_SCORES.map(({ key, label, help, scale }) => `
+  <div class="field">
+    <label for="${key}">${esc(label)} <span class="hint">optional</span></label>
+    <select id="${key}">
+      <option value="">Rather not say</option>
+      ${[5, 4, 3, 2, 1].map((n) =>
+        `<option value="${n}">${"★".repeat(n)} — ${esc(scale[n])}</option>`).join("")}
+    </select>
+    <span class="hint">${esc(help)}</span>
+  </div>`).join("");
 
 fillDatalist("airlines", AIRLINES);
 fillDatalist("hechsherim", HECHSHERIM);
@@ -46,9 +57,29 @@ async function init() {
   }
 
   form.hidden = false;
+  wireBylineChoice();
 
   const id = new URLSearchParams(location.search).get("edit");
   if (id) await loadForEdit(id);
+}
+
+function wireBylineChoice() {
+  const select = $("#post_as");
+  const hint = $("#post-as-hint");
+  const name = (profile.display_name || "").trim();
+
+  select.querySelector('option[value="name"]').textContent =
+    name ? `Post as ${name}` : "Post as Traveler (no display name set)";
+
+  const describe = () => {
+    hint.textContent = select.value === "anon"
+      ? "Shown as “Anonymous”. Site admins can still see it was you, and your other ratings cannot be linked to this one."
+      : name
+        ? "You can change your display name any time on the My ratings page — your existing bylines update with it."
+        : "Set a display name on the My ratings page to sign your ratings, or post anonymously instead.";
+  };
+  select.addEventListener("change", describe);
+  describe();
 }
 
 /* ------------------------------------------------------------ edit an existing rating */
@@ -67,11 +98,14 @@ async function loadForEdit(id) {
 
   for (const key of ["airline", "flight_number", "origin_city", "destination_city",
                      "flight_date", "cabin_class", "meal_type", "meal_name",
-                     "hechsher", "comment"]) {
+                     "hechsher", "comment", "experience_notes",
+                     ...EXPERIENCE_SCORES.map((score) => score.key)]) {
     const field = document.getElementById(key);
     if (field) field.value = data[key] ?? "";
   }
   $("#rating").value = String(data.rating);
+  $("#post_as").value = data.is_anonymous ? "anon" : "name";
+  $("#post_as").dispatchEvent(new Event("change"));
   attachments = (data.photos || []).map((path) => ({ path, url: photoUrl(path) }));
   drawThumbs();
 }
@@ -170,8 +204,13 @@ form.addEventListener("submit", async (event) => {
       hechsher: orNull("hechsher"),
       rating: Number(value("rating")),
       comment: orNull("comment"),
+      experience_notes: orNull("experience_notes"),
+      is_anonymous: $("#post_as").value === "anon",
       photos
     };
+    for (const { key } of EXPERIENCE_SCORES) {
+      payload[key] = value(key) ? Number(value(key)) : null;
+    }
 
     const { error } = editingId
       ? await supabase.from("reviews").update(payload).eq("id", editingId)

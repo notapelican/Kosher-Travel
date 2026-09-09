@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Airlines — Kosher Travel</title>
+<meta name="description" content="Airline-by-airline averages for kosher meal quality, treatment of Jewish passengers, and kosher and observance handling.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🍽️</text></svg>">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+<main>
+  <div class="wrap">
+    <div class="page-head">
+      <h1>Airlines at a glance</h1>
+      <p>Averages across every rating on the site. The two right-hand columns are optional on the
+         rating form, so they usually rest on fewer reports than the meal score — a single number
+         is one person's experience, not a verdict.</p>
+    </div>
+
+    <div id="page-notice"></div>
+    <div class="notice" id="list-msg" hidden></div>
+
+    <form class="filters" id="airline-controls" style="grid-template-columns:1fr auto">
+      <div>
+        <label for="sort-by">Sort by</label>
+        <select id="sort-by"></select>
+      </div>
+      <div>
+        <label for="min-reports">Minimum reports</label>
+        <select id="min-reports">
+          <option value="1">1+</option>
+          <option value="3">3+</option>
+          <option value="5">5+</option>
+        </select>
+      </div>
+    </form>
+
+    <div class="card table-scroll">
+      <table class="admin" id="airline-table">
+        <thead><tr id="airline-head"></tr></thead>
+        <tbody id="airline-body"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    Traveler-reported and unaudited. Crews, caterers and certifications change constantly.
+  </div>
+</footer>
+<script type="module" src="js/airlines.js"></script>
+</body>
+</html>

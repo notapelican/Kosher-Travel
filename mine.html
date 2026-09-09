@@ -13,7 +13,9 @@
   <div class="wrap">
     <div class="page-head">
       <h1>My ratings</h1>
-      <p>Edit or delete anything you have posted.</p>
+      <p>Edit or delete anything you have posted. Ratings you posted anonymously are marked below —
+         they show as “Anonymous” to everyone else, and nothing on the public site links them to your
+         other ratings.</p>
     </div>
     <div id="page-notice"></div>
     <div class="notice" id="list-msg" hidden></div>
@@ -21,8 +23,10 @@
     <div class="card" id="name-card" hidden style="margin-bottom:20px">
       <form id="name-form" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
         <div class="field" style="margin:0;flex:1;min-width:220px">
-          <label for="display_name">Display name <span class="hint">shown on your ratings</span></label>
-          <input id="display_name" maxlength="60">
+          <label for="display_name">Display name
+            <span class="hint">signs the ratings you post under your name — leave it blank to show
+              as “Traveler”. It does not have to be your real name.</span></label>
+          <input id="display_name" maxlength="60" placeholder="Traveler">
         </div>
         <button type="submit">Save name</button>
       </form>

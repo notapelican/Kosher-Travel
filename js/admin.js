@@ -7,6 +7,8 @@ const msg = $("#admin-msg");
 const list = $("#reviews");
 const usersBody = $("#users-body");
 let profile = null;
+/** user id -> profile, so anonymous reviews can still be attributed here. */
+let usersById = new Map();
 
 enablePhotoLightbox(list);
 init();
@@ -20,7 +22,9 @@ async function init() {
 
   $("#admin-body").hidden = false;
   wireTabs();
-  await Promise.all([loadReviews(), loadUsers()]);
+  // users first, so anonymous reviews can be attributed on the ratings tab
+  await loadUsers();
+  await loadReviews();
 }
 
 function wireTabs() {
@@ -58,6 +62,9 @@ async function loadReviews() {
 
   list.innerHTML = data.length
     ? data.map((review) => reviewCard(review, {
+        bylineNote: review.is_anonymous
+          ? `(anonymous — ${usersById.get(review.user_id)?.email || review.user_id})`
+          : "",
         actions: `<a class="btn small" href="submit.html?edit=${review.id}">Edit</a>
                   <button class="small" data-toggle="${review.id}" data-hidden="${review.is_hidden}">
                     ${review.is_hidden ? "Unhide" : "Hide"}</button>
@@ -114,6 +121,8 @@ async function loadUsers() {
     supabase.from("reviews").select("user_id").limit(5000)
   ]);
   if (error) return notify(msg, error.message, "error");
+
+  usersById = new Map(users.map((user) => [user.id, user]));
 
   const byUser = new Map();
   for (const row of counts || []) byUser.set(row.user_id, (byUser.get(row.user_id) || 0) + 1);

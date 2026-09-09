@@ -1,7 +1,9 @@
 # Kosher Travel
 
 A site where travelers rate kosher inflight meals — airline, flight number, the city the
-meal was loaded in, the hechsher on the seal, a 1–5 score, notes and photos.
+meal was loaded in, the hechsher on the seal, a 1–5 score, notes and photos. Reviewers can
+also report, optionally, how the airline treated them as a Jewish traveler, and can sign a
+rating with a display name or post it anonymously.
 
 Everything runs on free tiers: the site itself is static files served by **GitHub Pages**,
 and accounts, data and photos live in a free **Supabase** project. There is no build step
@@ -9,16 +11,55 @@ and nothing to install.
 
 ```
 index.html      browse + search all ratings
+airlines.html   per-airline averages: meal, respect, kosher handling
 submit.html     post a rating (also used to edit one, ?edit=<id>)
 mine.html       your own ratings + display name
 admin.html      admin dashboard: hide/edit/delete ratings, ban/promote users
 css/styles.css  all styling (light + dark)
 js/config.js    <- the only file you have to edit
 js/app.js       Supabase client, auth, shared rendering
-js/browse.js  js/submit.js  js/mine.js  js/admin.js
-js/options.js   airline / hechsher / meal suggestion lists
-supabase/schema.sql   tables, row-level security, storage bucket
+js/browse.js  js/airlines.js  js/submit.js  js/mine.js  js/admin.js
+js/options.js   airline / hechsher / meal lists, and the experience-score wording
+supabase/schema.sql       tables, row-level security, storage bucket
+supabase/migrations/      changes to apply to an already-deployed database
 ```
+
+## What a rating records
+
+Required: airline, the city the meal was loaded in, and a 1–5 meal score. Everything else is
+optional — flight number, destination, date, cabin, meal type, what it actually was, the
+hechsher on the seal, notes, and up to four photos.
+
+Two further optional scores cover how the airline treats Jewish passengers, kept separate
+because they are different questions:
+
+| Score | What it asks |
+| --- | --- |
+| **Respect for Jewish passengers** | Courtesy and basic decency toward visibly Jewish passengers. 5 = treated normally and warmly, 1 = hostility or an antisemitic incident. |
+| **Kosher & observance handling** | Did they get the kosher meal right and take religious practice in stride — davening, tefillin, bringing your own food, a seat change? |
+
+Both default to "Rather not say" so nobody is pushed into scoring something they did not
+observe, and there is a free-text box for specifics. `airlines.html` averages each score per
+airline and shows how many reports it rests on, since one report is one person's experience.
+
+The exact wording of these scores, including each point on the 1–5 scale, lives in
+`EXPERIENCE_SCORES` in [`js/options.js`](js/options.js) — change it there and the form, the
+review cards and the airline table all follow.
+
+## Bylines and anonymity
+
+Each rating is signed one of two ways, chosen per rating:
+
+- **Under a display name** the reviewer sets on the *My ratings* page. It need not be a real
+  name, and leaving it blank shows as "Traveler". Renaming updates the byline on every
+  rating they signed.
+- **Anonymously**, shown as "Anonymous".
+
+Anonymity is enforced by the database, not just by the page. The public site reads the
+`reviews_public` view, which drops the poster's `user_id` on anonymous rows, so an anonymous
+rating cannot be matched to the same person's signed ratings even by someone querying the API
+directly. Admins can still see who posted what — the form says so plainly — because
+moderation is impossible otherwise.
 
 ## Setup
 
@@ -26,8 +67,10 @@ supabase/schema.sql   tables, row-level security, storage bucket
 
 1. Sign up at [supabase.com](https://supabase.com) and create a new project (free plan, no card).
 2. Open **SQL Editor**, paste the whole of [`supabase/schema.sql`](supabase/schema.sql), and run it.
-   That creates the `profiles` and `reviews` tables, the security policies, and the
-   public `meal-photos` storage bucket.
+   That creates the `profiles` and `reviews` tables, the `reviews_public` view, the security
+   policies, and the public `meal-photos` storage bucket. It is safe to re-run.
+   If you set the project up before a feature was added, run the matching file in
+   [`supabase/migrations/`](supabase/migrations) instead — those are also safe to re-run.
 3. Open **Project Settings → API** and copy the **Project URL** and the **anon public** key.
 
 ### 2. Point the site at it
@@ -75,6 +118,12 @@ update public.profiles set is_admin = true where email = 'you@example.com';
 
 Reload the site and an **Admin** link appears in the header.
 
+## Testing the security rules
+
+The row-level security policies are the whole defense, so they have tests that run against a
+throwaway local Postgres — no Supabase account needed. See
+[`supabase/tests/README.md`](supabase/tests/README.md).
+
 ## Running locally
 
 Because the pages use ES modules, open them through a server rather than `file://`:
@@ -87,6 +136,8 @@ python3 -m http.server 8000
 ## How moderation works
 
 - Anyone signed in and not banned can post, with no limit on ratings per meal or per flight.
+- Anonymous ratings are anonymous to the public, not to you: the admin ratings tab shows the
+  poster's email beside an anonymous byline.
 - Ratings are public immediately; the admin dashboard can **hide** one (it stays visible to
   its author and to admins), **edit** it, or **delete** it along with its photos.
 - **Ban** blocks a user from posting new ratings or uploading photos, enforced by database

@@ -2,6 +2,7 @@ import {
   supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard,
   enablePhotoLightbox, notify, fillSelect, $
 } from "./app.js";
+import { EXPERIENCE_SCORES } from "./options.js";
 
 const PAGE_SIZE = 20;
 
@@ -34,9 +35,8 @@ if (!isConfigured) {
 /* Filter values + headline numbers, from a single lightweight query. */
 async function loadFacets() {
   const { data, error } = await supabase
-    .from("reviews")
+    .from("reviews_public")
     .select("rating, airline, hechsher")
-    .eq("is_hidden", false)
     .limit(5000);
   if (error || !data) return;
 
@@ -66,10 +66,7 @@ function currentFilters() {
 }
 
 function buildQuery({ q, airline, hechsher, sort }, from, to) {
-  let query = supabase
-    .from("reviews")
-    .select("*")
-    .eq("is_hidden", false);
+  let query = supabase.from("reviews_public").select("*");
 
   if (airline) query = query.eq("airline", airline);
   if (hechsher) query = query.eq("hechsher", hechsher);
@@ -83,9 +80,22 @@ function buildQuery({ q, airline, hechsher, sort }, from, to) {
     );
   }
 
-  if (sort === "best") query = query.order("rating", { ascending: false }).order("created_at", { ascending: false });
-  else if (sort === "worst") query = query.order("rating", { ascending: true }).order("created_at", { ascending: false });
-  else query = query.order("created_at", { ascending: false });
+  const SORTS = {
+    best:  { column: "rating", ascending: false },
+    worst: { column: "rating", ascending: true },
+    respect: { column: "respect_score", ascending: false },
+    care:    { column: "kosher_care_score", ascending: false }
+  };
+  const chosen = SORTS[sort];
+  if (chosen) {
+    // nullsFirst false keeps unrated reviews out of the way when sorting by an
+    // optional score.
+    query = query
+      .order(chosen.column, { ascending: chosen.ascending, nullsFirst: false })
+      .order("created_at", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
 
   return query.range(from, to);
 }

@@ -52,6 +52,7 @@ async function load() {
 
   list.innerHTML = data.length
     ? data.map((review) => reviewCard(review, {
+        bylineNote: review.is_anonymous ? "(posted anonymously)" : "",
         actions: `<a class="btn small" href="submit.html?edit=${review.id}">Edit</a>
                   <button class="small danger" data-delete="${review.id}">Delete</button>`
       })).join("")

@@ -77,6 +77,15 @@ create table if not exists public.reviews (
   rating         smallint not null check (rating between 1 and 5),
   comment        text,
   photos         text[] not null default '{}',
+
+  -- How the airline treats Jewish travelers. Both are optional: a reviewer
+  -- who has nothing to say leaves them blank rather than guessing.
+  respect_score     smallint check (respect_score is null or respect_score between 1 and 5),
+  kosher_care_score smallint check (kosher_care_score is null or kosher_care_score between 1 and 5),
+  experience_notes  text,
+
+  -- A reviewer may post under their display name or anonymously, per review.
+  is_anonymous   boolean not null default false,
   author_name    text not null default 'Traveler',
   is_hidden      boolean not null default false,
   created_at     timestamptz not null default now(),
@@ -88,6 +97,8 @@ create index if not exists reviews_airline_idx on public.reviews (lower(airline)
 create index if not exists reviews_origin_idx on public.reviews (lower(origin_city));
 create index if not exists reviews_hechsher_idx on public.reviews (lower(hechsher));
 create index if not exists reviews_user_idx on public.reviews (user_id);
+create index if not exists reviews_respect_idx on public.reviews (respect_score);
+create index if not exists reviews_kosher_care_idx on public.reviews (kosher_care_score);
 
 create or replace function public.touch_updated_at()
 returns trigger language plpgsql as $$
@@ -127,10 +138,12 @@ drop policy if exists profiles_admin_all on public.profiles;
 create policy profiles_admin_all on public.profiles
   for all using (public.is_admin()) with check (public.is_admin());
 
--- reviews: visible reviews are world-readable (even signed out, for browsing).
-drop policy if exists reviews_select_public on public.reviews;
-create policy reviews_select_public on public.reviews
-  for select using (not is_hidden or user_id = auth.uid() or public.is_admin());
+-- reviews: the table itself is readable only by the row's owner and by admins.
+-- Everyone else browses through the reviews_public view defined below, which
+-- withholds the poster's id on anonymous reviews.
+drop policy if exists reviews_select_own_or_admin on public.reviews;
+create policy reviews_select_own_or_admin on public.reviews
+  for select using (user_id = auth.uid() or public.is_admin());
 
 -- any signed-in, non-banned user may post; no per-meal limit.
 drop policy if exists reviews_insert_own on public.reviews;
@@ -164,8 +177,12 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  new.author_name := coalesce(
-    (select display_name from public.profiles where id = new.user_id), 'Traveler');
+  new.author_name := case
+    when new.is_anonymous then 'Anonymous'
+    else coalesce(
+      nullif(trim((select display_name from public.profiles where id = new.user_id)), ''),
+      'Traveler')
+  end;
   return new;
 end;
 $$;
@@ -186,8 +203,9 @@ as $$
 begin
   if new.display_name is distinct from old.display_name then
     update public.reviews
-       set author_name = coalesce(new.display_name, 'Traveler')
-     where user_id = new.id;
+       set author_name = coalesce(nullif(trim(new.display_name), ''), 'Traveler')
+     where user_id = new.id
+       and not is_anonymous;
   end if;
   return new;
 end;
@@ -197,6 +215,28 @@ drop trigger if exists profiles_sync_author_name on public.profiles;
 create trigger profiles_sync_author_name
   after update on public.profiles
   for each row execute function public.sync_author_name();
+
+-- ---------------------------------------------------------------------------
+-- reviews_public: what signed-out visitors and the browse page read.
+--
+-- security_invoker is deliberately left off, so the view runs as its owner and
+-- bypasses the table policy above — that is what lets anyone browse. It does
+-- its own filtering instead: hidden reviews never appear, and an anonymous
+-- review's user_id is nulled out so nobody can tie a person's anonymous posts
+-- to their named ones.
+-- ---------------------------------------------------------------------------
+drop view if exists public.reviews_public;
+create view public.reviews_public as
+  select id,
+         case when is_anonymous then null else user_id end as user_id,
+         airline, flight_number, origin_city, destination_city, flight_date,
+         cabin_class, meal_type, meal_name, hechsher, rating, comment, photos,
+         respect_score, kosher_care_score, experience_notes,
+         author_name, is_anonymous, created_at
+  from public.reviews
+  where not is_hidden;
+
+grant select on public.reviews_public to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Storage bucket for meal photos: public read, owner-scoped write.

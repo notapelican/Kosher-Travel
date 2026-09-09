@@ -279,3 +279,43 @@ dialog.lightbox::backdrop { background: rgba(0, 0, 0, .78); }
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;
 }
+
+/* ---------- optional Jewish-traveler-experience scores ---------- */
+.subscores {
+  grid-column: 1 / -1;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: 9px;
+  display: grid;
+  gap: 4px;
+}
+.subscore { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; font-size: 13px; }
+.subscore > span { color: var(--muted); }
+.experience-notes { margin: 6px 0 0; font-size: 14px; white-space: pre-wrap; }
+
+/* the airline summary table */
+.score-cell { white-space: nowrap; }
+.score-cell .stars { font-size: 13px; }
+.score-cell small { color: var(--muted); display: block; font-size: 11px; }
+.no-data { color: var(--muted); font-size: 13px; }
+.fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 16px 4px;
+  margin: 0 0 16px;
+}
+.fieldset legend { font-size: 13px; font-weight: 600; padding: 0 6px; }
+.fieldset > .hint { display: block; margin: -6px 0 14px; }
+.check-row { display: flex; gap: 10px; align-items: flex-start; }
+.check-row input { width: auto; margin-top: 3px; flex: none; }
+.check-row label { margin: 0; font-weight: 600; }
+
+/* fractional star row, used for averages */
+.stars.fractional { position: relative; display: inline-block; }
+.stars.fractional .off { color: var(--border); }
+.stars.fractional .fill {
+  position: absolute; left: 0; top: 0;
+  overflow: hidden; white-space: nowrap;
+  color: var(--star);
+}

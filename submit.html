@@ -90,11 +90,38 @@
           placeholder="Was it served hot? Sealed? Did the crew know where it was? Anything the next traveler should know."></textarea>
       </div>
 
+      <fieldset class="fieldset">
+        <legend>How did the airline treat you as a Jewish traveler?</legend>
+        <span class="hint">Both optional — leave a score blank if you would rather not say or
+          nothing stood out. These are averaged per airline on the
+          <a href="airlines.html">airlines page</a>.</span>
+
+        <div class="grid-2" id="experience-fields"></div>
+
+        <div class="field">
+          <label for="experience_notes">Anything specific?
+            <span class="hint">e.g. crew found the meal immediately, or gave you trouble for davening</span></label>
+          <textarea id="experience_notes" maxlength="2000" style="min-height:70px"></textarea>
+        </div>
+      </fieldset>
+
       <div class="field">
         <label for="photos">Photos <span class="hint">up to 4, resized in your browser before upload</span></label>
         <input type="file" id="photos" accept="image/*" multiple>
         <div class="thumbs" id="thumbs"></div>
       </div>
+
+      <fieldset class="fieldset">
+        <legend>How should this be signed?</legend>
+        <div class="field">
+          <label for="post_as">Byline</label>
+          <select id="post_as">
+            <option value="name">Post as my display name</option>
+            <option value="anon">Post anonymously</option>
+          </select>
+          <span class="hint" id="post-as-hint"></span>
+        </div>
+      </fieldset>
 
       <button type="submit" class="primary" id="submit-btn">Post rating</button>
       <a class="btn" href="index.html" id="cancel-link" hidden style="margin-left:8px">Cancel</a>

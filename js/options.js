@@ -31,3 +31,34 @@ export const MEAL_TYPES = [
 ];
 
 export const CABIN_CLASSES = ["Economy", "Premium economy", "Business", "First"];
+
+// The two optional "how does this airline treat Jewish travelers" scores.
+// One definition, used by the form, the review cards and the airline table.
+export const EXPERIENCE_SCORES = [
+  {
+    key: "respect_score",
+    label: "Respect for Jewish passengers",
+    short: "Respect",
+    help: "Courtesy and basic decency toward visibly Jewish passengers — 5 = treated normally and warmly, 1 = hostility or an antisemitic incident.",
+    scale: {
+      5: "Warm, entirely normal treatment",
+      4: "Polite, no issues",
+      3: "Indifferent",
+      2: "Cold or dismissive",
+      1: "Hostile / antisemitic incident"
+    }
+  },
+  {
+    key: "kosher_care_score",
+    label: "Kosher & observance handling",
+    short: "Kosher care",
+    help: "Did they get the kosher meal right and take religious practice in stride — davening, tefillin, bringing your own food, a seat change?",
+    scale: {
+      5: "Knew exactly what to do",
+      4: "Handled it well",
+      3: "Managed, with some confusion",
+      2: "Confused or unhelpful",
+      1: "No idea, or made it difficult"
+    }
+  }
+];

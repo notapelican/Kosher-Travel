@@ -1,5 +1,6 @@
 import { createClient } from "./vendor/supabase.js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY, SITE_NAME } from "./config.js";
+import { EXPERIENCE_SCORES } from "./options.js";
 
 export const isConfigured =
   !SUPABASE_URL.includes("YOUR-PROJECT-REF") && !SUPABASE_ANON_KEY.startsWith("YOUR-");
@@ -21,10 +22,18 @@ export function esc(value) {
   ));
 }
 
-export function stars(rating) {
-  const n = Math.round(Number(rating) || 0);
-  return `<span class="stars" aria-label="${n} out of 5">${
-    "★".repeat(n)}<span class="off">${"★".repeat(5 - n)}</span></span>`;
+export function stars(rating, { fractional = false } = {}) {
+  const value = Number(rating) || 0;
+  if (!fractional) {
+    const n = Math.round(value);
+    return `<span class="stars" role="img" aria-label="${n} out of 5">${
+      "★".repeat(n)}<span class="off">${"★".repeat(5 - n)}</span></span>`;
+  }
+  // Averages get a partial fill, so 4.5 does not read as a perfect 5.
+  const pct = Math.max(0, Math.min(100, (value / 5) * 100));
+  return `<span class="stars fractional" role="img" aria-label="${value.toFixed(1)} out of 5">`
+    + `<span class="off">★★★★★</span>`
+    + `<span class="fill" style="width:${pct.toFixed(1)}%">★★★★★</span></span>`;
 }
 
 export function formatDate(value, opts = { dateStyle: "medium" }) {
@@ -79,7 +88,7 @@ export async function currentProfile({ refresh = false } = {}) {
   // The row is created by a trigger; fall back to the auth record if it is
   // not visible yet (very first login).
   return (cachedProfile = data ?? {
-    id: user.id, email: user.email, display_name: user.email, is_admin: false, is_banned: false
+    id: user.id, email: user.email, display_name: null, is_admin: false, is_banned: false
   });
 }
 
@@ -170,6 +179,7 @@ export async function renderHeader(active) {
       <a class="brand" href="index.html"><span aria-hidden="true">🍽️</span> ${esc(SITE_NAME)}</a>
       <nav class="nav">
         ${link("index.html", "Browse")}
+        ${link("airlines.html", "Airlines")}
         ${link("submit.html", "Rate a meal")}
         ${profile ? link("mine.html", "My ratings") : ""}
         ${profile?.is_admin ? link("admin.html", "Admin") : ""}
@@ -197,7 +207,7 @@ export function renderSetupWarning() {
 
 /* ---------------------------------------------------- review card + photos */
 
-export function reviewCard(review, { actions = "" } = {}) {
+export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
   const route = [review.origin_city, review.destination_city].filter(Boolean).join(" → ");
   const tags = [
     review.hechsher ? `<span class="tag hechsher">${esc(review.hechsher)}</span>` : "",
@@ -211,7 +221,19 @@ export function reviewCard(review, { actions = "" } = {}) {
                       data-full="${esc(photoUrl(p))}">`)
     .join("");
 
+  const scored = EXPERIENCE_SCORES.filter(({ key }) => review[key]);
+  const subscores = scored.length
+    ? `<div class="subscores">${scored.map(({ key, label }) =>
+        `<div class="subscore"><span>${esc(label)}</span>${stars(review[key])}</div>`).join("")}
+       ${review.experience_notes
+          ? `<p class="experience-notes">${esc(review.experience_notes)}</p>` : ""}
+      </div>`
+    : review.experience_notes
+      ? `<div class="subscores"><p class="experience-notes">${esc(review.experience_notes)}</p></div>`
+      : "";
+
   const title = [review.airline, review.flight_number].filter(Boolean).join(" ");
+  const byline = review.is_anonymous ? "Anonymous" : (review.author_name || "Traveler");
 
   return `
     <article class="review" data-id="${esc(review.id)}">
@@ -221,12 +243,13 @@ export function reviewCard(review, { actions = "" } = {}) {
       </div>
       <div class="rating-cell">
         ${stars(review.rating)}
-        <div class="num">${esc(review.rating)}/5</div>
+        <div class="num">Meal ${esc(review.rating)}/5</div>
       </div>
       <div class="meta">${tags}</div>
       ${review.comment ? `<p class="comment">${esc(review.comment)}</p>` : ""}
+      ${subscores}
       ${photos ? `<div class="photos">${photos}</div>` : ""}
-      <div class="byline">${esc(review.author_name || "Traveler")} · ${esc(formatDate(review.created_at))}</div>
+      <div class="byline">${esc(byline)}${bylineNote ? ` <span class="hint">${esc(bylineNote)}</span>` : ""} · ${esc(formatDate(review.created_at))}</div>
       ${review.is_hidden ? `<div class="hidden-flag">Hidden from the public list</div>` : ""}
       ${actions ? `<div class="row-actions">${actions}</div>` : ""}
     </article>`;
