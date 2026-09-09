@@ -156,9 +156,20 @@ img { max-width: 100%; }
   padding-right: max(16px, env(safe-area-inset-right));
 }
 main { padding: var(--sp-5) 0 var(--sp-6); }
+/* Visually hidden but still focusable and readable by assistive tech. The
+   resets matter: form controls otherwise keep their min-height and padding
+   here and reserve real space in the layout. */
 .sr-only {
-  position: absolute; width: 1px; height: 1px; overflow: hidden;
-  clip-path: inset(50%); white-space: nowrap;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 @media (min-width: 600px) {
@@ -185,6 +196,15 @@ main { padding: var(--sp-5) 0 var(--sp-6); }
   padding-top: env(safe-area-inset-top);
 }
 @supports not (backdrop-filter: blur(1px)) { .site-header { background: var(--surface); } }
+/* a hairline of accent under the header, fading out to the right */
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent 55%);
+  opacity: .5;
+}
 .site-header .wrap {
   display: flex;
   align-items: center;
@@ -210,13 +230,13 @@ main { padding: var(--sp-5) 0 var(--sp-6); }
   display: grid;
   place-items: center;
   flex: none;
-  width: 28px; height: 28px;
-  border-radius: 9px;
-  background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 62%, #000));
+  width: 30px; height: 30px;
+  border-radius: 10px;
+  background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 58%, #000));
   color: #fff;
-  font-size: 15px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, .22);
 }
+.brand-mark svg { width: 20px; height: 20px; }
 
 /* the inline nav is desktop-only; phones get .tabbar instead */
 .nav { display: none; align-items: center; gap: var(--sp-1); }
@@ -437,6 +457,17 @@ input[type="file"] { padding: 10px 13px; background: var(--surface-2); cursor: p
     var(--bg-tint);
   border-bottom: 1px solid var(--border);
 }
+.hero .wrap { position: relative; z-index: 1; }
+/* dotted flight path arcing across the hero */
+.hero-deco {
+  position: absolute;
+  top: 0; right: 0;
+  width: 460px;
+  max-width: 78%;
+  color: var(--accent);
+  opacity: .22;
+  pointer-events: none;
+}
 .hero h1 { max-width: 26ch; margin-bottom: 10px; font-size: 28px; }
 .hero p { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; }
 .hero-actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-4); }
@@ -466,6 +497,16 @@ input[type="file"] { padding: 10px 13px; background: var(--surface-2); cursor: p
   border-radius: var(--r-md);
   padding: 12px 14px;
   box-shadow: var(--shadow-sm);
+}
+.stat::before {
+  content: "";
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  opacity: .5;
+  margin-bottom: 8px;
 }
 .stat b {
   display: block;
@@ -531,8 +572,20 @@ input[type="file"] { padding: 10px 13px; background: var(--surface-2); cursor: p
   padding: var(--sp-4);
   transition: box-shadow .18s, border-color .18s;
 }
+.review::before {
+  content: "";
+  position: absolute;
+  inset: 14px auto 14px 0;
+  width: 2px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  opacity: 0;
+  transform: scaleY(.4);
+  transition: opacity .18s, transform .18s;
+}
 @media (hover: hover) {
   .review:hover { box-shadow: var(--shadow-md); border-color: var(--border-strong); }
+  .review:hover::before { opacity: .55; transform: scaleY(1); }
 }
 @media (min-width: 600px) { .review { padding: var(--sp-4) var(--sp-5); } }
 
@@ -646,6 +699,7 @@ input[type="file"] { padding: 10px 13px; background: var(--surface-2); cursor: p
   padding: var(--sp-3);
   background: var(--surface-2);
   border: 1px solid var(--border);
+  border-left: 2px solid var(--accent-line);
   border-radius: var(--r-md);
 }
 .subscores-head {
@@ -719,7 +773,10 @@ input[type="file"] { padding: 10px 13px; background: var(--surface-2); cursor: p
 .accordion > summary::-webkit-details-marker { display: none; }
 .accordion > summary:active { background: var(--surface-2); }
 @media (hover: hover) { .accordion > summary:hover { background: var(--surface-2); } }
-.accordion[open] > summary { border-bottom: 1px solid var(--border); }
+.accordion[open] > summary {
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--accent-tint), transparent);
+}
 
 .accordion-title { font-weight: 640; font-size: 15.5px; letter-spacing: -0.015em; }
 .accordion-sub { display: block; font-size: 12.5px; font-weight: 400; color: var(--muted); margin-top: 2px; }
@@ -755,6 +812,50 @@ input[type="file"] { padding: 10px 13px; background: var(--surface-2); cursor: p
 }
 .fieldset legend { font-size: 13px; font-weight: 640; padding: 0 6px; }
 .fieldset > .hint { display: block; margin: 0 0 var(--sp-4); }
+
+/* upload area ------------------------------------------------------------
+   The native file input is visually hidden and this label stands in for it,
+   which is the only way to restyle "Choose files". It doubles as a drop
+   target on desktop. */
+.uploader {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: var(--sp-4);
+  cursor: pointer;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(120% 140% at 0% 0%, var(--accent-tint), transparent 60%),
+    var(--surface-2);
+  transition: border-color .18s, background .18s, transform .12s;
+}
+.uploader:active { transform: scale(.995); }
+@media (hover: hover) {
+  .uploader:hover { border-color: var(--accent); }
+}
+#photos:focus-visible + .uploader { outline: 2px solid var(--accent); outline-offset: 2px; }
+.uploader.is-dragging {
+  border-color: var(--accent);
+  border-style: solid;
+  background: var(--accent-tint);
+}
+.uploader.is-full { opacity: .6; }
+.uploader-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px; height: 44px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.uploader-icon svg { width: 26px; height: 26px; }
+.uploader-text { display: grid; gap: 2px; min-width: 0; }
+.uploader-text b { font-size: 14.5px; font-weight: 640; }
 
 /* photo thumbs on the form ---------------------------------------------- */
 .thumbs {
@@ -830,6 +931,14 @@ input[type="file"] { padding: 10px 13px; background: var(--surface-2); cursor: p
   border-radius: var(--r-lg);
 }
 .empty b { display: block; color: var(--ink); font-size: 16px; margin-bottom: 4px; }
+.empty-mark {
+  display: block;
+  width: 40px;
+  margin: 0 auto var(--sp-3);
+  color: var(--accent);
+  opacity: .35;
+}
+.empty-mark svg { width: 100%; height: auto; }
 @media (min-width: 600px) { .empty { padding: var(--sp-7) var(--sp-4); } }
 
 /* ==========================================================================
@@ -986,6 +1095,16 @@ dialog.sheet::backdrop { background: rgba(8, 10, 12, .5); backdrop-filter: blur(
   }
 }
 
+.site-footer::before {
+  content: "";
+  display: block;
+  width: 46px;
+  height: 2px;
+  margin: 0 auto var(--sp-4);
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: .45;
+}
 .site-footer {
   border-top: 1px solid var(--border);
   padding: var(--sp-5) 0 var(--sp-6);

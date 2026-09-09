@@ -128,6 +128,15 @@ update public.profiles set is_admin = true where email = 'you@example.com';
 
 Reload the site and an **Admin** link appears in the header.
 
+## Logo
+
+The mark is a paper plane over a meal tray, defined once as `LOGO` in
+[`js/app.js`](js/app.js) and reused for the header badge, the photo uploader and the empty
+states. It is plain inline SVG in `currentColor`, so it inherits whatever colour it sits on and
+needs no image file. The favicon is the same paths as a `data:` URI in each page's `<head>`,
+alongside a `theme-color` for mobile browser chrome. Three shapes, no gradients inside the
+mark itself — it still reads at 16px, which an outlined plate or a cloche did not.
+
 ## Layout
 
 The CSS is mobile-first: everything before the first `min-width` query *is* the phone layout,
@@ -142,6 +151,10 @@ gives way to inline nav), 1040px (desktop). Notable phone behavior:
 - `env(safe-area-inset-*)` is respected, so nothing hides behind an iPhone's home indicator
   or notch.
 - The sign-in dialog is a bottom sheet on phones and a centered modal from 600px.
+- Photo upload is a large tappable drop zone rather than a native file button: the real
+  `<input type="file">` is visually hidden and a styled label stands in for it, which is the
+  only way to restyle "Choose files". It accepts drag-and-drop on desktop, and reports how
+  many photos are attached and how many more will fit.
 
 ## Testing the security rules
 

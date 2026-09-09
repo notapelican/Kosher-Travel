@@ -11,6 +11,18 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 export const PHOTO_BUCKET = "meal-photos";
 
+/**
+ * The logo: a paper plane above a plate. Two tones on the plane give it the
+ * folded look, and both are currentColor so the mark works on any background
+ * and in either theme.
+ */
+export const LOGO = `
+  <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+    <path d="M27.5 4.5 6 14l6.4 2.8z" fill="currentColor"/>
+    <path d="M12.4 16.8 15.2 23.2 27.5 4.5z" fill="currentColor" fill-opacity=".68"/>
+    <rect x="5" y="24.4" width="22" height="3.4" rx="1.7" fill="currentColor"/>
+  </svg>`;
+
 /* ------------------------------------------------------------------ utils */
 
 export const $ = (sel, root = document) => root.querySelector(sel);
@@ -200,7 +212,7 @@ export async function renderHeader(active) {
   header.innerHTML = `
     <div class="wrap">
       <a class="brand" href="index.html">
-        <span class="brand-mark" aria-hidden="true">✦</span>${esc(SITE_NAME)}</a>
+        <span class="brand-mark">${LOGO}</span>${esc(SITE_NAME)}</a>
       <nav class="nav" aria-label="Main">
         ${items.map((item) =>
           `<a class="navlink" href="${item.href}"${current(item.href)}>${esc(item.label)}</a>`).join("")}
@@ -241,6 +253,15 @@ export function renderSetupWarning() {
     <code>js/config.js</code>, and run <code>supabase/schema.sql</code> in the Supabase SQL editor.
     See the <a href="https://github.com/notapelican/Kosher-Travel#setup">setup steps</a>.`;
   target.prepend(box);
+}
+
+/** Empty state with the logo watermarked above it. */
+export function emptyState(title, body = "") {
+  return `<div class="empty">
+    <span class="empty-mark">${LOGO}</span>
+    <b>${esc(title)}</b>
+    ${body}
+  </div>`;
 }
 
 /* ---------------------------------------------------- review card + photos */

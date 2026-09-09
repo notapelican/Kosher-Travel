@@ -1,6 +1,6 @@
 import {
   supabase, isConfigured, renderHeader, renderSetupWarning,
-  openAuthDialog, reviewCard, enablePhotoLightbox, notify, PHOTO_BUCKET, $
+  openAuthDialog, reviewCard, enablePhotoLightbox, notify, emptyState, PHOTO_BUCKET, $
 } from "./app.js";
 
 const list = $("#reviews");
@@ -15,7 +15,7 @@ async function init() {
   if (!isConfigured) return renderSetupWarning();
 
   if (!profile) {
-    list.innerHTML = `<div class="empty">Sign in to see your ratings.</div>`;
+    list.innerHTML = emptyState("Sign in to see your ratings");
     openAuthDialog();
     return;
   }
@@ -56,7 +56,8 @@ async function load() {
         actions: `<a class="btn small" href="submit.html?edit=${review.id}">Edit</a>
                   <button class="small danger" data-delete="${review.id}">Delete</button>`
       })).join("")
-    : `<div class="empty">Nothing yet. <a href="submit.html">Rate your first meal.</a></div>`;
+    : emptyState("No ratings yet",
+        `<a href="submit.html">Rate your first meal.</a>`);
 }
 
 list.addEventListener("click", async (event) => {

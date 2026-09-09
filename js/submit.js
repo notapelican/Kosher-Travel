@@ -74,9 +74,13 @@ function wireAccordions() {
 
   const refresh = () => {
     const rating = $("#rating").value;
+    const photos = attachments.length
+      ? `${attachments.length} photo${attachments.length > 1 ? "s" : ""}`
+      : "";
     setState("#state-meal", rating
-      ? `${stars(rating)}<span class="label-text">${photoLabel()}</span>`
-      : `<span class="label-text">Not scored yet</span>`, Boolean(rating));
+      ? `${stars(rating)}<span class="label-text">${photos ? ` · ${photos}` : ""}</span>`
+      : `<span class="label-text">${photos || "Not scored yet"}</span>`,
+      Boolean(rating) || Boolean(photos));
 
     const scores = EXPERIENCE_SCORES.filter(({ key }) => $(`#${key}`).value).length;
     const written = $("#experience_notes").value.trim().length > 0;
@@ -92,9 +96,6 @@ function wireAccordions() {
         ? "Anonymous"
         : esc(profile.display_name?.trim() || "Traveler")}</span>`, false);
   };
-
-  const photoLabel = () =>
-    attachments.length ? ` · ${attachments.length} photo${attachments.length > 1 ? "s" : ""}` : "";
 
   form.addEventListener("input", refresh);
   form.addEventListener("change", refresh);
@@ -171,10 +172,8 @@ async function loadForEdit(id) {
 
 /* ---------------------------------------------------------------------- photos */
 
-$("#photos").addEventListener("change", async (event) => {
-  const picked = Array.from(event.target.files || []);
-  event.target.value = "";
-  for (const file of picked) {
+async function addFiles(files) {
+  for (const file of Array.from(files || [])) {
     if (attachments.length >= MAX_PHOTOS) {
       notify(msg, `Up to ${MAX_PHOTOS} photos per rating.`, "error");
       break;
@@ -188,10 +187,53 @@ $("#photos").addEventListener("change", async (event) => {
     }
   }
   drawThumbs();
+}
+
+$("#photos").addEventListener("change", async (event) => {
+  const picked = event.target.files;
+  await addFiles(picked);
+  event.target.value = "";
 });
+
+/* Drag and drop onto the upload area, for anyone on a desktop. */
+const uploader = $("#uploader");
+if (uploader) {
+  const setDragging = (on) => uploader.classList.toggle("is-dragging", on);
+
+  for (const type of ["dragenter", "dragover"]) {
+    uploader.addEventListener(type, (event) => {
+      event.preventDefault();
+      setDragging(true);
+    });
+  }
+  uploader.addEventListener("dragleave", (event) => {
+    if (!uploader.contains(event.relatedTarget)) setDragging(false);
+  });
+  uploader.addEventListener("drop", async (event) => {
+    event.preventDefault();
+    setDragging(false);
+    await addFiles(event.dataTransfer?.files);
+  });
+  // Dropping anywhere else on the page should not navigate away from the form.
+  for (const type of ["dragover", "drop"]) {
+    window.addEventListener(type, (event) => {
+      if (!uploader.contains(event.target)) event.preventDefault();
+    });
+  }
+}
 
 function drawThumbs() {
   drawThumbs.onchange?.();
+
+  const hint = $("#uploader-hint");
+  if (hint) {
+    const left = MAX_PHOTOS - attachments.length;
+    hint.textContent = attachments.length
+      ? `${attachments.length} of ${MAX_PHOTOS} added${left ? ` · room for ${left} more` : " · that's the limit"}`
+      : "Tap to choose or take a photo · up to 4";
+  }
+  $("#uploader")?.classList.toggle("is-full", attachments.length >= MAX_PHOTOS);
+
   thumbs.innerHTML = attachments
     .map((a, i) => `<div class="thumb">
         <img src="${esc(a.url)}" alt="Selected meal photo ${i + 1}">
