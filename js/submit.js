@@ -174,10 +174,7 @@ async function loadForEdit(id) {
 
 async function addFiles(files) {
   for (const file of Array.from(files || [])) {
-    if (attachments.length >= MAX_PHOTOS) {
-      notify(msg, `Up to ${MAX_PHOTOS} photos per rating.`, "error");
-      break;
-    }
+    if (attachments.length >= MAX_PHOTOS) break;
     if (!file.type.startsWith("image/")) continue;
     try {
       const resized = await shrinkImage(file);
@@ -226,13 +223,15 @@ function drawThumbs() {
   drawThumbs.onchange?.();
 
   const hint = $("#uploader-hint");
+  const full = attachments.length >= MAX_PHOTOS;
   if (hint) {
-    const left = MAX_PHOTOS - attachments.length;
-    hint.textContent = attachments.length
-      ? `${attachments.length} of ${MAX_PHOTOS} added${left ? ` · room for ${left} more` : " · that's the limit"}`
-      : "Tap to choose or take a photo · up to 4";
+    hint.textContent = !attachments.length
+      ? "Tap to choose, or drag them here"
+      : full
+        ? "Remove one to add another"
+        : `${attachments.length} photo${attachments.length > 1 ? "s" : ""} added`;
   }
-  $("#uploader")?.classList.toggle("is-full", attachments.length >= MAX_PHOTOS);
+  $("#uploader")?.classList.toggle("is-full", full);
 
   thumbs.innerHTML = attachments
     .map((a, i) => `<div class="thumb">

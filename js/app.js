@@ -12,15 +12,18 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 export const PHOTO_BUCKET = "meal-photos";
 
 /**
- * The logo: a paper plane above a plate. Two tones on the plane give it the
- * folded look, and both are currentColor so the mark works on any background
- * and in either theme.
+ * The logo: an airliner seen from above whose wings are a fork and a knife.
+ * Three flat shapes in currentColor, so it works on any background and in
+ * either theme. The cutlery reads from about 28px up — where the header badge
+ * and the photo uploader draw it — and at favicon size it still reads as a
+ * plane. Drawn once here and reused everywhere, including the plane at the end
+ * of the hero's flight path in index.html.
  */
 export const LOGO = `
   <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
-    <path d="M27.5 4.5 6 14l6.4 2.8z" fill="currentColor"/>
-    <path d="M12.4 16.8 15.2 23.2 27.5 4.5z" fill="currentColor" fill-opacity=".68"/>
-    <rect x="5" y="24.4" width="22" height="3.4" rx="1.7" fill="currentColor"/>
+    <path d="M16 3.2c1.3 0 2.1 1.6 2.1 3.7v14.3l1.9 2.4v2L16 24.3l-4 1.3v-2l1.9-2.4V6.9c0-2.1.8-3.7 2.1-3.7Z" fill="currentColor"/>
+    <path d="M13.4 11.6H6.9v1.4H2.4v1.3h4.5v1.4h6.5z" fill="currentColor"/>
+    <path d="M18.6 11.9h5.1c3 0 5.6 1 5.6 2s-2.6 2-5.6 2h-5.1z" fill="currentColor"/>
   </svg>`;
 
 /* ------------------------------------------------------------------ utils */

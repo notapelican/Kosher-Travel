@@ -130,12 +130,17 @@ Reload the site and an **Admin** link appears in the header.
 
 ## Logo
 
-The mark is a paper plane over a meal tray, defined once as `LOGO` in
-[`js/app.js`](js/app.js) and reused for the header badge, the photo uploader and the empty
-states. It is plain inline SVG in `currentColor`, so it inherits whatever colour it sits on and
-needs no image file. The favicon is the same paths as a `data:` URI in each page's `<head>`,
-alongside a `theme-color` for mobile browser chrome. Three shapes, no gradients inside the
-mark itself — it still reads at 16px, which an outlined plate or a cloche did not.
+The mark is an airliner seen from above whose wings are a fork and a knife. It is defined once
+as `LOGO` in [`js/app.js`](js/app.js) and reused for the header badge, the photo uploader, the
+empty states and the plane at the end of the hero's flight path. Plain inline SVG in
+`currentColor`, so it inherits whatever colour it sits on and needs no image file; the favicon
+is the same three paths as a `data:` URI in each page's `<head>`, beside a `theme-color` for
+mobile browser chrome.
+
+Three flat shapes is the whole budget. The cutlery reads from about 28px up — which is where
+the header badge and uploader draw it — and at favicon size it still reads as a plane. Things
+that did not survive testing at 16px: an outlined plate (turns into a smiley), a cloche, a
+winged plate, and cutlery drawn with strokes rather than filled tines.
 
 ## Layout
 
