@@ -6,13 +6,18 @@
 <title>Kosher Travel — Option D: Window Seat</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap" rel="stylesheet">
 <style>
-/* Direction: I as it was, with A's search strip in place of the two-box lookup: From, To,
-   Airline, Hechsher, a button, and the sort chips. Results stay as cards on the tray table. */
+/* Option D: the window seat. The same light cabin and oval window as C, but results are
+   photo cards on the tray table and airlines are bars, no table. Light by default, dark
+   follows the device with a night sky in the window. */
 :root{
-  --wall:#e9e8e4; --tray:#f6f5f1; --ink:#23262b; --ink-2:#555a62; --mute:#878c94; --line:#d6d5cf;
-  --sky:#2a6fb0; --sky-tint:#e3edf7; --sun:#e2a53a;
+  --wall:#e9e8e4; --tray:#f6f5f1; --tray-2:#efede8; --card:#e9e8e4; --ink:#23262b; --ink-2:#555a62; --mute:#878c94; --line:#d6d5cf;
+  --sky:#2a6fb0; --sky-tint:#e3edf7; --sun:#e2a53a; --frame:#cfd0cb; --frame-ring:#e3e4df; --frame-shadow:rgba(0,0,0,.18);
   --f:"Nunito Sans",system-ui,sans-serif; color-scheme:light;
 }
+@media (prefers-color-scheme: dark){:root{
+  --wall:#0e1012; --tray:#171a1d; --tray-2:#1b1f23; --card:#1f2429; --ink:#eceef0; --ink-2:#c3c7cc; --mute:#8f949b; --line:#2a3036;
+  --sky:#5aa0e6; --sky-tint:#142433; --sun:#e8b35a; --frame:#2a2d31; --frame-ring:#35393e; --frame-shadow:rgba(0,0,0,.6); color-scheme:dark;
+}}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--wall);color:var(--ink);font:15px/1.5 var(--f)}
 a{color:inherit;text-decoration:none}
@@ -29,18 +34,18 @@ nav a.btn{background:var(--sky);color:#fff}
 
 .cabin{display:grid;grid-template-columns:1fr;gap:22px;padding:14px 0 10px;align-items:center}
 @media(min-width:820px){.cabin{grid-template-columns:minmax(0,1fr) 340px}}
-.cabin h1{margin:0 0 10px;font:800 clamp(30px,4.4vw,46px)/1.08 var(--f);letter-spacing:-.025em;max-width:16ch;text-wrap:balance}
-.cabin p{margin:0;max-width:46ch;color:var(--ink-2);font-size:17px}
-.window{justify-self:center;width:min(100%,340px);aspect-ratio:3/4;border-radius:46% / 34%;background:#cfd0cb;padding:20px;box-shadow:inset 0 2px 6px rgba(0,0,0,.18),0 10px 30px -18px rgba(0,0,0,.35)}
-.window .pane{width:100%;height:100%;border-radius:46% / 34%;overflow:hidden;position:relative;background:var(--sky-tint);box-shadow:inset 0 0 0 6px #e3e4df,inset 0 0 30px rgba(0,0,0,.25)}
+.cabin h1{margin:0 0 10px;font:800 clamp(30px,4.4vw,46px)/1.08 var(--f);letter-spacing:-.025em;max-width:18ch;text-wrap:balance}
+.cabin h1 em{font-style:normal;color:var(--sky)}
+.cabin p{margin:0 0 14px;max-width:46ch;color:var(--ink-2);font-size:17px}
+.tick{font-size:13px;color:var(--mute);display:flex;flex-wrap:wrap;gap:0 14px}
+.tick b{color:var(--ink);font-weight:800}
+.window{justify-self:center;width:min(100%,340px);aspect-ratio:3/4;border-radius:46% / 34%;background:var(--frame);padding:20px;box-shadow:inset 0 2px 6px var(--frame-shadow),0 10px 30px -18px rgba(0,0,0,.35)}
+.window .pane{width:100%;height:100%;border-radius:46% / 34%;overflow:hidden;position:relative;background:var(--sky-tint);box-shadow:inset 0 0 0 6px var(--frame-ring),inset 0 0 30px rgba(0,0,0,.25)}
 .window img{width:100%;height:100%;object-fit:cover;display:block}
-.window .tag{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);background:rgba(246,245,241,.92);border-radius:999px;padding:6px 12px;font:600 12px var(--f);white-space:nowrap}
-.window .tag b{font-weight:800;color:var(--sky)}
 
-/* A's search strip */
 .sel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 6px;background:var(--tray);border-radius:16px;padding:14px}
 .sel label{display:block;font:800 10px var(--f);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:5px}
-.sel input,.sel select{width:100%;height:48px;background:#fff;border:1.5px solid var(--line);color:var(--ink);font:800 19px var(--f);text-transform:uppercase;padding:0 12px;border-radius:12px}
+.sel input,.sel select{width:100%;height:48px;background:var(--tray-2);border:1.5px solid var(--line);color:var(--ink);font:800 19px var(--f);text-transform:uppercase;padding:0 12px;border-radius:12px}
 .sel select{font-size:15px;font-weight:600;text-transform:none}
 .sel .go{align-self:end}
 .sel .go button{width:100%;height:48px;background:var(--sky);color:#fff;border:0;border-radius:12px;font:800 15px var(--f);cursor:pointer}
@@ -48,23 +53,13 @@ nav a.btn{background:var(--sky);color:#fff}
 .sort{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
 .sort a{font:600 12px var(--f);padding:6px 11px;border:1.5px solid var(--line);border-radius:999px;color:var(--ink-2);background:var(--tray)}
 .sort a.on{border-color:var(--sky);color:var(--sky)}
+.count{font-size:13px;color:var(--mute);margin:16px 0 0}
+.count b{color:var(--ink);font-weight:800}
 
-.tray-table{background:var(--tray);border-radius:22px 22px 0 0;padding:24px 22px 40px;margin-top:16px;box-shadow:0 -1px 0 var(--line)}
-.count{font-size:13px;color:var(--mute);margin:0 0 12px}
-.count b{color:var(--ink)}
-.row{display:grid;grid-template-columns:1fr;gap:14px}
-@media(min-width:820px){.row{grid-template-columns:1fr 1fr 1fr}}
-.card{background:var(--wall);border-radius:16px;padding:16px;display:grid;gap:10px;align-content:start}
-.card h2{margin:0;font:800 15px var(--f);letter-spacing:-.01em}
-.card h2 small{display:block;font:600 12px var(--f);color:var(--mute);margin-top:2px}
-.card img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block}
-.card .nophoto{width:100%;aspect-ratio:4/3;border-radius:10px;background:repeating-linear-gradient(135deg,var(--tray) 0 8px,#e2e1dc 8px 9px);display:grid;place-items:center;font:600 12px var(--f);color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
-.card p{margin:0;font-size:14px;color:var(--ink-2)}
-.card .meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mute)}
-.stars{color:var(--sun);letter-spacing:1px;font-size:14px}
-.air{margin-top:22px}
-.air h2{margin:0 0 10px;font:800 18px var(--f);letter-spacing:-.02em}
+.tray-table{background:var(--tray);border-radius:22px 22px 0 0;padding:22px 22px 40px;margin-top:14px;box-shadow:0 -1px 0 var(--line)}
+h2.sec{margin:0 0 10px;font:800 18px var(--f);letter-spacing:-.02em}
 .air .r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.air .r:last-child{border-bottom:1px solid var(--line)}
 .air .r b{font-weight:800}
 .air .r span{font-size:13px;color:var(--mute)}
 .air .r .sc{font:800 22px var(--f);font-variant-numeric:tabular-nums}
@@ -72,6 +67,18 @@ nav a.btn{background:var(--sky);color:#fff}
 .air .r .bars{grid-column:1/-1;display:grid;grid-template-columns:auto 1fr auto 1fr;gap:4px 8px;align-items:center;font-size:11px;color:var(--mute)}
 .air .r .bars i{height:6px;border-radius:3px;background:var(--line);display:block;position:relative;overflow:hidden}
 .air .r .bars i b{position:absolute;inset:0 auto 0 0;background:var(--sky)}
+.latest{margin-top:26px}
+.row{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:640px){.row{grid-template-columns:1fr 1fr}}
+@media(min-width:960px){.row{grid-template-columns:1fr 1fr 1fr}}
+.card{background:var(--card);border-radius:16px;padding:16px;display:grid;gap:10px;align-content:start}
+.card h3{margin:0;font:800 15px var(--f);letter-spacing:-.01em}
+.card h3 small{display:block;font:600 12px var(--f);color:var(--mute);margin-top:2px}
+.card img,.card .nophoto{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block}
+.card .nophoto{background:repeating-linear-gradient(135deg,var(--tray) 0 8px,var(--line) 8px 9px);display:grid;place-items:center;font:600 12px var(--f);color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
+.card p{margin:0;font-size:14px;color:var(--ink-2)}
+.card .meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mute);gap:8px;flex-wrap:wrap}
+.stars{color:var(--sun);letter-spacing:1px;font-size:14px}
 footer{padding:16px 0 40px;font-size:13px;color:var(--mute)}
 </style>
 </head>
@@ -85,37 +92,41 @@ footer{padding:16px 0 40px;font-size:13px;color:var(--mute)}
 
 <section class="cabin">
   <div>
-    <h1>Know what's coming before the cart does.</h1>
+    <h1>Know how your inflight meal will be <em>before it gets to you.</em></h1>
     <p>Travelers report the kosher meal they were served: the airline, the city it was loaded in, the seal on the lid, and how the crew handled it.</p>
+    <div class="tick"><span><b>142</b> reports</span><span><b>48</b> routes</span><span><b>23</b> airlines</span><span>updated <b>14 min</b> ago</span></div>
   </div>
-  <div class="window"><div class="pane"><img src="img/sky-day.jpg" alt="View from an airplane window over clouds"><div class="tag"><b>142</b> meals reported · <b>23</b> airlines</div></div></div>
+  <div class="window"><div class="pane"><picture><source srcset="img/sky-night.jpg" media="(prefers-color-scheme: dark)"><img src="img/sky-day.jpg" alt="View from an airplane window"></picture></div></div>
 </section>
 
 <form class="sel" onsubmit="return false">
-  <div><label for="p-from">From</label><input id="p-from" value="JFK"></div>
-  <div><label for="p-to">To</label><input id="p-to" value="TLV"></div>
-  <div><label for="p-al">Airline</label><select id="p-al"><option>Any airline</option><option>El Al</option><option>Delta</option><option>United</option></select></div>
-  <div><label for="p-h">Hechsher</label><select id="p-h"><option>Any hechsher</option><option>OU</option><option>Kof-K</option><option>KLBD</option></select></div>
-  <div class="go"><button type="submit">Look up</button></div>
+  <div><label for="d-from">From</label><input id="d-from" value="JFK"></div>
+  <div><label for="d-to">To</label><input id="d-to" value="TLV"></div>
+  <div><label for="d-al">Airline</label><select id="d-al"><option>Any airline</option><option>El Al</option><option>Delta</option><option>United</option></select></div>
+  <div><label for="d-h">Hechsher</label><select id="d-h"><option>Any hechsher</option><option>OU</option><option>Kof-K</option><option>KLBD</option></select></div>
+  <div class="go"><button type="submit">Find meals</button></div>
 </form>
 <div class="sort"><a class="on" href="#">Newest</a><a href="#">Best meal</a><a href="#">Best treatment</a><a href="#">Kosher handling</a><a href="#">Most reports</a></div>
+<p class="count"><b>41 reports</b> on JFK → TLV · 3 airlines · any hechsher</p>
 
 <div class="tray-table">
-  <p class="count"><b>41 reports</b> on JFK → TLV · 3 airlines · any hechsher</p>
-  <div class="row">
-    <article class="card"><img src="img/tray-1.jpg" alt=""><h2>El Al LY 26 · JFK → TLV<small>OU · loaded New York · Chicken with rice</small></h2><p>Seal intact, served with the rest of the cabin. Crew asked before opening the lid.</p><div class="meta"><span class="stars">★★★★☆</span><span>Sarah S. · 2d ago</span></div></article>
-    <article class="card"><img src="img/tray-2.jpg" alt=""><h2>Delta DL 234 · JFK → TLV<small>OU · loaded New York · Brisket, potatoes</small></h2><p>Good brisket, arrived lukewarm. The attendant knew what a kosher meal was.</p><div class="meta"><span class="stars">★★★★☆</span><span>Anonymous · 1w ago</span></div></article>
-    <article class="card"><div class="nophoto">No photo</div><h2>United UA 90 · EWR → TLV<small>Kof-K · loaded Newark · Chicken, rice</small></h2><p>Took two asks before it came out, after everyone else. Fine once it arrived.</p><div class="meta"><span class="stars">★★★☆☆</span><span>Anonymous · 2w ago</span></div></article>
-    <article class="card"><img src="img/tray-4.jpg" alt=""><h2>El Al LY 8 · JFK → TLV<small>OU · loaded New York · Breakfast</small></h2><p>Every component sealed with its own sticker. Someone davening in the galley got a polite "take your time".</p><div class="meta"><span class="stars">★★★★★</span><span>M. Katz · 1mo ago</span></div></article>
-    <article class="card"><img src="img/tray-3.jpg" alt=""><h2>El Al LY 2 · TLV → JFK<small>Rabbanut · loaded Tel Aviv · Cold plate</small></h2><p>Return leg. Cold plate, every item sealed, served first.</p><div class="meta"><span class="stars">★★★★☆</span><span>D. Mizrahi · 1mo ago</span></div></article>
-    <article class="card"><img src="img/tray-2.jpg" alt=""><h2>Delta DL 234 · JFK → TLV<small>OU · loaded New York · Beef and potatoes</small></h2><p>Hot this time. Crew offered to heat the roll separately.</p><div class="meta"><span class="stars">★★★★☆</span><span>Anonymous · 2mo ago</span></div></article>
-  </div>
-
   <section class="air">
-    <h2>Airlines on JFK → TLV</h2>
-    <div class="r"><div><b>El Al</b> <span>· 31 reports · OU</span></div><div class="sc">4.3<small>/5</small></div><div class="bars"><span>Respect</span><i><b style="width:96%"></b></i><span>Kosher care</span><i><b style="width:98%"></b></i></div></div>
-    <div class="r"><div><b>Delta</b> <span>· 12 reports · OU</span></div><div class="sc">3.9<small>/5</small></div><div class="bars"><span>Respect</span><i><b style="width:88%"></b></i><span>Kosher care</span><i><b style="width:82%"></b></i></div></div>
-    <div class="r"><div><b>United</b> <span>· 18 reports · Kof-K, from EWR</span></div><div class="sc">3.4<small>/5</small></div><div class="bars"><span>Respect</span><i><b style="width:82%"></b></i><span>Kosher care</span><i><b style="width:72%"></b></i></div></div>
+    <h2 class="sec">Airlines on JFK → TLV</h2>
+    <div class="r"><div><b>El Al</b> <span>· 31 reports · OU · loaded New York</span></div><div class="sc">4.3<small>/5</small></div><div class="bars"><span>Respect</span><i><b style="width:96%"></b></i><span>Kosher care</span><i><b style="width:98%"></b></i></div></div>
+    <div class="r"><div><b>Delta</b> <span>· 12 reports · OU · loaded New York</span></div><div class="sc">3.9<small>/5</small></div><div class="bars"><span>Respect</span><i><b style="width:88%"></b></i><span>Kosher care</span><i><b style="width:82%"></b></i></div></div>
+    <div class="r"><div><b>United</b> <span>· 18 reports · Kof-K · from EWR</span></div><div class="sc">3.4<small>/5</small></div><div class="bars"><span>Respect</span><i><b style="width:82%"></b></i><span>Kosher care</span><i><b style="width:72%"></b></i></div></div>
+  </section>
+
+  <section class="latest">
+    <h2 class="sec">Latest reports on JFK → TLV</h2>
+    <div class="row">
+      <article class="card"><img src="img/tray-1.jpg" alt=""><h3>El Al LY 26<small>OU · loaded New York · Chicken with rice, challah roll</small></h3><p>Seal intact, served with the rest of the cabin. Crew asked before opening the lid.</p><div class="meta"><span class="stars">★★★★☆</span><span>Sarah S. · 12 Oct · Respect 5 · Care 5</span></div></article>
+      <article class="card"><img src="img/tray-2.jpg" alt=""><h3>Delta DL 234<small>OU · loaded New York · Brisket, roasted potatoes</small></h3><p>Good brisket, arrived lukewarm. The attendant knew what a kosher meal was.</p><div class="meta"><span class="stars">★★★★☆</span><span>Anonymous · 4 Oct · Respect 4 · Care 4</span></div></article>
+      <article class="card"><div class="nophoto">No photo</div><h3>United UA 90<small>Kof-K · loaded Newark · Chicken, rice, dinner roll</small></h3><p>Took two asks before it came out, after everyone else. Fine once it arrived.</p><div class="meta"><span class="stars">★★★☆☆</span><span>Anonymous · 28 Sep · Respect 4 · Care 3</span></div></article>
+      <article class="card"><img src="img/tray-4.jpg" alt=""><h3>El Al LY 8<small>OU · loaded New York · Breakfast: omelette, potatoes, yogurt</small></h3><p>Every component sealed with its own sticker. Someone davening in the galley got a polite "take your time".</p><div class="meta"><span class="stars">★★★★★</span><span>M. Katz · 21 Sep · Respect 5 · Care 5</span></div></article>
+      <article class="card"><img src="img/tray-3.jpg" alt=""><h3>El Al LY 2<small>Rabbanut Israel · loaded Tel Aviv · Cold plate: salmon, bagel, fruit</small></h3><p>Return leg. Every item sealed, served first.</p><div class="meta"><span class="stars">★★★★☆</span><span>D. Mizrahi · 14 Sep · Respect 5 · Care 4</span></div></article>
+      <article class="card"><img src="img/tray-2.jpg" alt=""><h3>Delta DL 234<small>OU · loaded New York · Beef and potatoes</small></h3><p>Hot this time. Crew offered to heat the roll separately.</p><div class="meta"><span class="stars">★★★★☆</span><span>Anonymous · 2 Sep · Respect 4 · Care 4</span></div></article>
+    </div>
   </section>
 </div>
 </div>

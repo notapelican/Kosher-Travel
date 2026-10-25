@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Kosher Travel Design Shortlist</title>
-<meta name="description" content="Four design directions for the Kosher Travel site, each with a live sample-data mockup.">
+<meta name="description" content="Four design directions for the Kosher Travel site, each with a live sample-data mockup in light and dark mode.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d6b63'/%3E%3Cpath d='M16 3.2c1.3 0 2.1 1.6 2.1 3.7v14.3l1.9 2.4v2L16 24.3l-4 1.3v-2l1.9-2.4V6.9c0-2.1.8-3.7 2.1-3.7Z' fill='%23fff'/%3E%3Cpath d='M13.4 11.6H6.9v1.4H2.4v1.3h4.5v1.4h6.5z' fill='%23fff'/%3E%3Cpath d='M18.6 11.9h5.1c3 0 5.6 1 5.6 2s-2.6 2-5.6 2h-5.1z' fill='%23fff'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,700&display=swap" rel="stylesheet">
@@ -33,17 +33,16 @@ h1 b{font-weight:700}
 .opt h2{font:300 clamp(26px,3.6vw,36px)/1.1 var(--d);margin:0;letter-spacing:-.01em}
 .opt h2 b{font-weight:700}
 .opt .one{color:var(--ink-2);max-width:62ch;margin:0}
+.mode{font:600 12px var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:4px 0 -8px}
 .shots{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:760px){.shots{grid-template-columns:minmax(0,1fr) 300px}}
-.shots.two{grid-template-columns:1fr}
-@media(min-width:760px){.shots.two{grid-template-columns:1fr 1fr}}
 .shot{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .shot img{display:block;width:100%;max-width:100%;height:auto}
 .shot.phone{max-height:720px;overflow:auto}
 .shot .cap{font:500 12px var(--f);color:var(--mute);padding:8px 12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
 .shot .cap a{color:var(--accent);font-weight:600;text-decoration:none}
 .notes{display:grid;gap:14px;grid-template-columns:1fr}
-@media(min-width:760px){.notes{grid-template-columns:1fr 1fr 1fr}}
+@media(min-width:760px){.notes{grid-template-columns:1fr 1fr}}
 .notes h3{font:600 12px var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:0 0 6px}
 .notes ul{margin:0;padding-left:18px;color:var(--ink-2)}
 .notes li{margin:0 0 4px}
@@ -57,25 +56,31 @@ h1 b{font-weight:700}
 <div class="wrap">
   <h1>Four directions for <b>Kosher Travel</b></h1>
   <div class="intro">
-    <p>A site where travelers rate kosher inflight meals: the airline, the flight, the city the meal was loaded in, the hechsher on the seal, a score, photos, and how the crew treated them. These are four candidate designs for its home page. Each is a live page with sample data; open them on a phone as well as a desktop.</p>
-    <p>All four share the same search: From, To, Airline, Hechsher, and sort chips. They differ in what the results look like and in mood.</p>
+    <p>A site where travelers rate kosher inflight meals: the airline, the flight, the city the meal was loaded in, the hechsher on the seal, a score, photos, and how the crew treated them. These are four candidate designs for its home page.</p>
+    <p>All four carry the same copy and the same functions, in the same order: the headline, the search (From, To, Airline, Hechsher, sort), the airlines on the route, and the latest reports on it. Every one follows the device's light or dark setting. The only thing that differs is the design, so that is the only thing to choose on.</p>
   </div>
+  <div class="tip">Each mockup is a live page with sample data. Open it on a phone as well as a desktop, and switch your device between light and dark appearance to see both themes; reload after switching.</div>
   <nav class="jump"><a href="#a">A · The Board</a><a href="#b">B · Night Flight</a><a href="#c">C · Board in the Cabin</a><a href="#d">D · Window Seat</a></nav>
 
   <section class="opt" id="a">
     <header>
       <div class="k">Option A</div>
       <h2>The <b>Board</b></h2>
-      <p class="one">An arrivals-hall departures board. The whole home page is one table: airline, flight, the city the meal was loaded in, the seal, the meal score in amber flap digits, and the two treatment scores as filled dots. Ink black and amber, condensed type. Dark only.</p>
+      <p class="one">The departures board. Condensed uppercase type, square corners, one amber accent, scores as flap digits, treatment as filled dots. Centered headline. In light mode the flap cells are white with ink digits; in dark mode they become the classic black-and-amber flap.</p>
     </header>
+    <div class="mode">Light</div>
     <div class="shots">
-      <div class="shot"><img src="shots/a-desk.jpg" alt="Option A at desktop width"><div class="cap"><span>Desktop</span><a href="a.html">Open live mockup</a></div></div>
-      <div class="shot phone"><img src="shots/a-phone.jpg" alt="Option A at phone width"><div class="cap"><span>Phone</span></div></div>
+      <div class="shot"><img src="shots/a-desk.jpg" alt="Option A, desktop, light"><div class="cap"><span>Desktop</span><a href="a.html">Open live mockup</a></div></div>
+      <div class="shot phone"><img src="shots/a-phone.jpg" alt="Option A, phone, light"><div class="cap"><span>Phone</span></div></div>
+    </div>
+    <div class="mode">Dark</div>
+    <div class="shots">
+      <div class="shot"><img src="shots/a-desk-dark.jpg" alt="Option A, desktop, dark"><div class="cap"><span>Desktop</span></div></div>
+      <div class="shot phone"><img src="shots/a-phone-dark.jpg" alt="Option A, phone, dark"><div class="cap"><span>Phone</span></div></div>
     </div>
     <div class="notes">
-      <div><h3>Leads with</h3><ul><li>The route, then everything comparable in one scan.</li></ul></div>
-      <div><h3>Strong when</h3><ul><li>You want to compare three airlines on one route fast.</li><li>There are many reports; density is the point.</li></ul></div>
-      <div><h3>Costs</h3><ul><li>Dark by nature; no light theme.</li><li>Photos are secondary.</li></ul></div>
+      <div><h3>Character</h3><ul><li>Mechanical, dense, confident. Reads like a terminal.</li><li>No photography in the hero; the board is the image.</li></ul></div>
+      <div><h3>Watch for</h3><ul><li>Uppercase condensed type everywhere can tire on long pages.</li><li>The strongest of the four in dark mode, the plainest in light.</li></ul></div>
     </div>
     <div><a class="open" href="a.html">Open Option A</a></div>
   </section>
@@ -84,16 +89,21 @@ h1 b{font-weight:700}
     <header>
       <div class="k">Option B</div>
       <h2>The <b>Night Flight</b></h2>
-      <p class="one">The dimmed cabin on an overnight flight. Near-black, one warm reading light on the featured tray, everything else low and quiet. Light serif, one amber. Reports in a single readable column, airlines as small tiles below. Dark only.</p>
+      <p class="one">The cabin at night. A light serif, one amber, a reading light on the featured tray, airlines as three quiet tiles and reports as a single column with a thumbnail. Dark mode is the near-black original; light mode is the same cabin in daylight, on warm paper.</p>
     </header>
+    <div class="mode">Light</div>
     <div class="shots">
-      <div class="shot"><img src="shots/b-desk.jpg" alt="Option B at desktop width"><div class="cap"><span>Desktop</span><a href="b.html">Open live mockup</a></div></div>
-      <div class="shot phone"><img src="shots/b-phone.jpg" alt="Option B at phone width"><div class="cap"><span>Phone</span></div></div>
+      <div class="shot"><img src="shots/b-desk.jpg" alt="Option B, desktop, light"><div class="cap"><span>Desktop</span><a href="b.html">Open live mockup</a></div></div>
+      <div class="shot phone"><img src="shots/b-phone.jpg" alt="Option B, phone, light"><div class="cap"><span>Phone</span></div></div>
+    </div>
+    <div class="mode">Dark</div>
+    <div class="shots">
+      <div class="shot"><img src="shots/b-desk-dark.jpg" alt="Option B, desktop, dark"><div class="cap"><span>Desktop</span></div></div>
+      <div class="shot phone"><img src="shots/b-phone-dark.jpg" alt="Option B, phone, dark"><div class="cap"><span>Phone</span></div></div>
     </div>
     <div class="notes">
-      <div><h3>Leads with</h3><ul><li>Mood, then the written reports.</li></ul></div>
-      <div><h3>Strong when</h3><ul><li>Most traffic is at night on a phone, in a seat.</li><li>You want people to read, not scan.</li></ul></div>
-      <div><h3>Costs</h3><ul><li>Lowest contrast of the four.</li><li>Comparison across airlines is weakest here.</li></ul></div>
+      <div><h3>Character</h3><ul><li>Calm and literary. Built for reading reports, not scanning tables.</li><li>Warmest palette of the four.</li></ul></div>
+      <div><h3>Watch for</h3><ul><li>Lowest contrast in dark mode.</li><li>Airline comparison is the lightest here: three tiles, no table.</li></ul></div>
     </div>
     <div><a class="open" href="b.html">Open Option B</a></div>
   </section>
@@ -102,22 +112,22 @@ h1 b{font-weight:700}
     <header>
       <div class="k">Option C</div>
       <h2>The <b>Board in the Cabin</b></h2>
-      <p class="one">A's table and search inside a light cabin: an oval window onto the sky, rounded controls, soft greys. The score cells are plain white cells with ink digits in light mode; in dark mode the page dims, the window shows a night sky, and the cells become the amber flap digits from A. Follows the phone's light or dark setting.</p>
+      <p class="one">A's table and flap digits inside a light cabin: an oval window onto the sky, rounded controls, soft greys, one sky blue. In dark mode the cabin dims, the window shows a night sky, and the score cells become the amber flap from A.</p>
     </header>
+    <div class="mode">Light</div>
     <div class="shots">
-      <div class="shot"><img src="shots/c-desk.jpg" alt="Option C at desktop width, light mode"><div class="cap"><span>Desktop · light</span><a href="c.html">Open live mockup</a></div></div>
-      <div class="shot phone"><img src="shots/c-phone.jpg" alt="Option C at phone width, light mode"><div class="cap"><span>Phone · light</span></div></div>
+      <div class="shot"><img src="shots/c-desk.jpg" alt="Option C, desktop, light"><div class="cap"><span>Desktop</span><a href="c.html">Open live mockup</a></div></div>
+      <div class="shot phone"><img src="shots/c-phone.jpg" alt="Option C, phone, light"><div class="cap"><span>Phone</span></div></div>
     </div>
+    <div class="mode">Dark</div>
     <div class="shots">
-      <div class="shot"><img src="shots/c-desk-dark.jpg" alt="Option C at desktop width, dark mode"><div class="cap"><span>Desktop · dark</span></div></div>
-      <div class="shot phone"><img src="shots/c-phone-dark.jpg" alt="Option C at phone width, dark mode"><div class="cap"><span>Phone · dark</span></div></div>
+      <div class="shot"><img src="shots/c-desk-dark.jpg" alt="Option C, desktop, dark"><div class="cap"><span>Desktop</span></div></div>
+      <div class="shot phone"><img src="shots/c-phone-dark.jpg" alt="Option C, phone, dark"><div class="cap"><span>Phone</span></div></div>
     </div>
     <div class="notes">
-      <div><h3>Leads with</h3><ul><li>A's table, in daylight. Photo cards follow it.</li></ul></div>
-      <div><h3>Strong when</h3><ul><li>You want A's clarity and a light default.</li><li>Both themes matter.</li></ul></div>
-      <div><h3>Costs</h3><ul><li>Two type voices, condensed table and rounded body. The seam to judge.</li></ul></div>
+      <div><h3>Character</h3><ul><li>A's clarity with a friendlier frame. The window is the one piece of imagery.</li><li>Rounded cards for the reports.</li></ul></div>
+      <div><h3>Watch for</h3><ul><li>Two type voices: a condensed table inside a rounded sans page.</li></ul></div>
     </div>
-    <div class="tip">To see C in dark mode, switch your phone or browser to dark appearance and reload the mockup.</div>
     <div><a class="open" href="c.html">Open Option C</a></div>
   </section>
 
@@ -125,16 +135,21 @@ h1 b{font-weight:700}
     <header>
       <div class="k">Option D</div>
       <h2>The <b>Window Seat</b></h2>
-      <p class="one">The same light cabin and oval window, with results as photo cards on the tray table rather than a table. The friendliest of the four. Airline comparison bars sit at the bottom. Light only.</p>
+      <p class="one">The same light cabin and oval window as C, with no table at all: airlines as score bars, reports as photo cards with star ratings, one rounded sans throughout. The friendliest of the four. Dark mode dims the cabin and shows the night sky.</p>
     </header>
+    <div class="mode">Light</div>
     <div class="shots">
-      <div class="shot"><img src="shots/d-desk.jpg" alt="Option D at desktop width"><div class="cap"><span>Desktop</span><a href="d.html">Open live mockup</a></div></div>
-      <div class="shot phone"><img src="shots/d-phone.jpg" alt="Option D at phone width"><div class="cap"><span>Phone</span></div></div>
+      <div class="shot"><img src="shots/d-desk.jpg" alt="Option D, desktop, light"><div class="cap"><span>Desktop</span><a href="d.html">Open live mockup</a></div></div>
+      <div class="shot phone"><img src="shots/d-phone.jpg" alt="Option D, phone, light"><div class="cap"><span>Phone</span></div></div>
+    </div>
+    <div class="mode">Dark</div>
+    <div class="shots">
+      <div class="shot"><img src="shots/d-desk-dark.jpg" alt="Option D, desktop, dark"><div class="cap"><span>Desktop</span></div></div>
+      <div class="shot phone"><img src="shots/d-phone-dark.jpg" alt="Option D, phone, dark"><div class="cap"><span>Phone</span></div></div>
     </div>
     <div class="notes">
-      <div><h3>Leads with</h3><ul><li>Photos of what actually arrived.</li></ul></div>
-      <div><h3>Strong when</h3><ul><li>You want the broadest, least intimidating welcome.</li><li>Most reports carry photos.</li></ul></div>
-      <div><h3>Costs</h3><ul><li>Cards can't be compared at a glance; the bars at the bottom do that job.</li></ul></div>
+      <div><h3>Character</h3><ul><li>Soft, consumer-app familiar. One typeface, stars instead of flap digits.</li></ul></div>
+      <div><h3>Watch for</h3><ul><li>The most conventional; least distinct from other travel sites.</li></ul></div>
     </div>
     <div><a class="open" href="d.html">Open Option D</a></div>
   </section>
