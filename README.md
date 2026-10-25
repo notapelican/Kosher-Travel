@@ -193,7 +193,12 @@ python3 -m http.server 8000
 - Photos are resized to 1600px and re-encoded as JPEG *in the browser* before upload, so a
   typical meal photo lands around 150–300 KB. Supabase's free plan includes 1 GB of storage,
   which is roughly 4,000 photos, and 500 MB of Postgres.
-- Free Supabase projects pause after a week with no traffic; opening the site resumes them.
+- Free Supabase projects pause after a week with no database requests. The scheduled workflow in
+  [`.github/workflows/keep-alive.yml`](.github/workflows/keep-alive.yml) runs one tiny query against
+  the public view twice a week to keep the project counted as active. It reads the project URL and
+  anon key from `js/config.js`, so it needs no setup and does nothing until those are filled in.
+  Two GitHub rules apply: scheduled workflows only run from the default branch, and GitHub switches
+  them off after 60 days without a commit (re-enable it under **Actions**, or push any commit).
 - GitHub Pages is free for public repositories, with a 100 GB/month soft bandwidth limit.
 
 ## Notes

@@ -1,0 +1,56 @@
+# Keeps the free Supabase project from pausing.
+#
+# Supabase pauses a free-plan project after about a week with no database
+# requests. This runs a tiny real query against the public view twice a week,
+# which counts as activity. It reads the project URL and anon key from
+# js/config.js, so there is nothing to configure here, and it skips itself
+# while the placeholders are still in that file.
+#
+# Two GitHub rules to know:
+#  - A scheduled workflow only runs from the repository's default branch.
+#  - GitHub disables scheduled workflows after 60 days with no commits to the
+#    repository. If that happens, re-enable it under Actions -> Keep Supabase
+#    awake -> Enable workflow, or just push a commit.
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: "17 9 * * 1,4" # Mondays and Thursdays, 09:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the Supabase project from js/config.js
+        id: config
+        run: |
+          url=$(sed -n 's/^export const SUPABASE_URL *= *"\([^"]*\)".*/\1/p' js/config.js)
+          key=$(sed -n 's/^export const SUPABASE_ANON_KEY *= *"\([^"]*\)".*/\1/p' js/config.js)
+          if [ -z "$url" ] || [ -z "$key" ] || [ "${url#*YOUR-PROJECT-REF}" != "$url" ] || [ "${key#YOUR-}" != "$key" ]; then
+            echo "js/config.js still holds placeholders; nothing to keep awake."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "url=$url" >> "$GITHUB_OUTPUT"
+            echo "key=$key" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run one query against the public view
+        if: steps.config.outputs.configured == 'true'
+        env:
+          SUPABASE_URL: ${{ steps.config.outputs.url }}
+          SUPABASE_ANON_KEY: ${{ steps.config.outputs.key }}
+        run: |
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --max-time 60 --retry 3 --retry-delay 10 \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/reviews_public?select=id&limit=1")
+          echo "HTTP $status"
+          [ "$status" = "200" ]
