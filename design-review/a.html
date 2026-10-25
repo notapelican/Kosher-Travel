@@ -50,9 +50,10 @@ nav a.btn{border:1px solid var(--amber);color:var(--amber)}
 .sel label{display:block;font:600 10px var(--m);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:5px}
 .sel input,.sel select{width:100%;height:46px;background:var(--board);border:1px solid var(--line);color:var(--ink);font:600 22px var(--d);text-transform:uppercase;letter-spacing:.06em;padding:0 12px;border-radius:0}
 .sel select{font-size:18px}
+.sel input::placeholder{color:var(--mute);opacity:.7}
 .sel .go{align-self:end}
 .sel .go button{width:100%;height:46px;background:var(--amber-fill);color:var(--amber-ink);border:0;font:700 18px var(--d);text-transform:uppercase;letter-spacing:.1em;cursor:pointer}
-@media(min-width:760px){.sel{grid-template-columns:1fr 1fr 1.2fr 1.4fr .8fr}}
+@media(min-width:760px){.sel{grid-template-columns:.9fr .9fr 1fr 1.2fr 1.4fr .8fr}}
 .sort{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .sort a{font:500 11px var(--m);letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border:1px solid var(--line);color:var(--ink-2)}
 .sort a.on{border-color:var(--amber);color:var(--amber)}
@@ -120,12 +121,13 @@ footer{border-top:1px solid var(--line);padding:18px 0 40px;font:400 12px var(--
 <form class="sel" onsubmit="return false">
   <div><label for="a-from">From</label><input id="a-from" value="JFK"></div>
   <div><label for="a-to">To</label><input id="a-to" value="TLV"></div>
+  <div><label for="a-flight">Flight</label><input id="a-flight" placeholder="LY 26"></div>
   <div><label for="a-al">Airline</label><select id="a-al"><option>Any airline</option><option>El Al</option><option>Delta</option><option>United</option></select></div>
   <div><label for="a-h">Hechsher</label><select id="a-h"><option>Any hechsher</option><option>OU</option><option>Kof-K</option><option>KLBD</option></select></div>
   <div class="go"><button type="submit">Find meals</button></div>
 </form>
 <div class="sort"><a class="on" href="#">Newest</a><a href="#">Best meal</a><a href="#">Best treatment</a><a href="#">Kosher handling</a><a href="#">Most reports</a></div>
-<p class="count"><b>41 reports</b> on JFK → TLV · 3 airlines · any hechsher</p>
+<p class="count"><b>41 reports</b> on JFK → TLV · any flight · 3 airlines · any hechsher</p>
 
 <h2 class="sec">Airlines on JFK → TLV</h2>
 <section class="board" aria-label="Airlines on this route">

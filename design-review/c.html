@@ -49,9 +49,10 @@ nav a.btn{background:var(--sky);color:#fff}
 .sel label{display:block;font:800 10px var(--f);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:5px}
 .sel input,.sel select{width:100%;height:48px;background:var(--tray);border:1.5px solid var(--line);color:var(--ink);font:700 22px var(--c);text-transform:uppercase;letter-spacing:.04em;padding:0 12px;border-radius:12px}
 .sel select{font-size:18px}
+.sel input::placeholder{color:var(--mute);opacity:.7}
 .sel .go{align-self:end}
 .sel .go button{width:100%;height:48px;background:var(--sky);color:#fff;border:0;border-radius:12px;font:800 15px var(--f);cursor:pointer}
-@media(min-width:760px){.sel{grid-template-columns:1fr 1fr 1.2fr 1.4fr .8fr}}
+@media(min-width:760px){.sel{grid-template-columns:.9fr .9fr 1fr 1.2fr 1.4fr .8fr}}
 .sort{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .sort a{font:600 12px var(--f);padding:6px 11px;border:1.5px solid var(--line);border-radius:999px;color:var(--ink-2);background:var(--tray)}
 .sort a.on{border-color:var(--sky);color:var(--sky)}
@@ -125,12 +126,13 @@ footer{padding:16px 0 40px;font-size:13px;color:var(--mute)}
 <form class="sel" onsubmit="return false">
   <div><label for="c-from">From</label><input id="c-from" value="JFK"></div>
   <div><label for="c-to">To</label><input id="c-to" value="TLV"></div>
+  <div><label for="c-flight">Flight</label><input id="c-flight" placeholder="LY 26"></div>
   <div><label for="c-al">Airline</label><select id="c-al"><option>Any airline</option><option>El Al</option><option>Delta</option><option>United</option></select></div>
   <div><label for="c-h">Hechsher</label><select id="c-h"><option>Any hechsher</option><option>OU</option><option>Kof-K</option><option>KLBD</option></select></div>
   <div class="go"><button type="submit">Find meals</button></div>
 </form>
 <div class="sort"><a class="on" href="#">Newest</a><a href="#">Best meal</a><a href="#">Best treatment</a><a href="#">Kosher handling</a><a href="#">Most reports</a></div>
-<p class="count"><b>41 reports</b> on JFK → TLV · 3 airlines · any hechsher</p>
+<p class="count"><b>41 reports</b> on JFK → TLV · any flight · 3 airlines · any hechsher</p>
 
 <div class="tray-table">
   <h2 class="sec">Airlines on JFK → TLV</h2>
