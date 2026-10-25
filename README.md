@@ -78,7 +78,10 @@ moderation is impossible otherwise.
 1. Sign up at [supabase.com](https://supabase.com) and create a new project (free plan, no card).
 2. Open **SQL Editor**, paste the whole of [`supabase/schema.sql`](supabase/schema.sql), and run it.
    That creates the `profiles` and `reviews` tables, the `reviews_public` view, the security
-   policies, and the public `meal-photos` storage bucket. It is safe to re-run.
+   policies, the table privileges the site needs, and the public `meal-photos` storage bucket.
+   It is safe to re-run. When creating the project, tick **Enable Data API**; the
+   "Automatically expose new tables" and "automatic RLS" options can stay off, since the schema
+   handles both itself.
    If you set the project up before a feature was added, run the matching file in
    [`supabase/migrations/`](supabase/migrations) instead — those are also safe to re-run.
 3. Open **Project Settings → API** and copy the **Project URL** and the **anon public** key.

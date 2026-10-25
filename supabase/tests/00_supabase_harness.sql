@@ -34,10 +34,8 @@ create function storage.foldername(name text) returns text[] language sql immuta
 $$;
 
 grant usage on schema public, storage to anon, authenticated;
--- Supabase grants these by default for the public schema
-alter default privileges in schema public grant select on tables to anon;
-alter default privileges in schema public
-  grant select, insert, update, delete on tables to authenticated;
-alter default privileges in schema public grant usage, select on sequences to anon, authenticated;
+-- No default table privileges on purpose: a Supabase project created with
+-- "Automatically expose new tables" switched off has none, and schema.sql
+-- must grant what the site needs explicitly.
 grant select, insert, update, delete on storage.objects to authenticated;
 grant select on storage.objects to anon;

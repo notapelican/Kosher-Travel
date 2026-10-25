@@ -238,6 +238,16 @@ create view public.reviews_public as
 
 grant select on public.reviews_public to anon, authenticated;
 
+-- Table privileges for the API roles. Supabase normally sets these as default
+-- privileges when a project has "Automatically expose new tables" switched on;
+-- granting them here makes the schema work either way. Signed-out visitors
+-- only ever read the reviews_public view above; signed-in users reach the
+-- tables, and row-level security decides which rows.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.profiles to authenticated;
+grant select, insert, update, delete on public.reviews to authenticated;
+grant usage, select on sequence public.reviews_id_seq to authenticated;
+
 -- ---------------------------------------------------------------------------
 -- Storage bucket for meal photos: public read, owner-scoped write.
 -- Photos are stored at  meal-photos/<user id>/<random>.jpg
