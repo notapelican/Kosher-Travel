@@ -130,17 +130,18 @@ Reload the site and an **Admin** link appears in the header.
 
 ## Logo
 
-The mark is an airliner seen from above whose wings are a fork and a knife. It is defined once
-as `LOGO` in [`js/app.js`](js/app.js) and reused for the header badge, the photo uploader, the
-empty states and the plane at the end of the hero's flight path. Plain inline SVG in
-`currentColor`, so it inherits whatever colour it sits on and needs no image file; the favicon
-is the same three paths as a `data:` URI in each page's `<head>`, beside a `theme-color` for
-mobile browser chrome.
+The mark is a K whose upper arm is a plane climbing out of the letter. Stem and leg share one
+stroke weight with flat ends, and the plane sits on the K's diagonal, clear of the joint, so
+it reads as a letter first and a plane second. It is defined once as `LOGO` in
+[`js/app.js`](js/app.js) and reused for the header badge and the empty states, as plain inline
+SVG in `currentColor`, so it inherits whatever colour it sits on and needs no image file. The
+favicon is the same mark on the brand tile as a `data:` URI in each page's `<head>`, with the
+plane's tail fin dropped, since at 16px the fin is only noise; the `theme-color` beside it
+colours mobile browser chrome.
 
-Three flat shapes is the whole budget. The cutlery reads from about 28px up — which is where
-the header badge and uploader draw it — and at favicon size it still reads as a plane. Things
-that did not survive testing at 16px: an outlined plate (turns into a smiley), a cloche, a
-winged plate, and cutlery drawn with strokes rather than filled tines.
+The earlier mark, a plane seen from above with fork-and-knife wings, read as a cross at
+favicon size: straight wings at mid-height make a plus sign. Swept wings and the letterform fix
+that. The design review that led here, with the alternatives, is under `design-review/logos/`.
 
 ## Layout
 
