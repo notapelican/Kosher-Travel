@@ -1,0 +1,87 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kosher Travel Logo Tuner</title><meta name="robots" content="noindex">
+<style>
+:root{--bg:#f3f2ee;--ink:#1d1f1c;--mute:#7a7d78;--line:#e2e0d9;--accent:#0d6b63;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#121412;--ink:#eceeea;--mute:#8e928c;--line:#2b2f2b;--accent:#5ac5b9;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}p{color:var(--mute);margin:0 0 18px;max-width:60ch}
+.grid{display:grid;gap:10px 18px;grid-template-columns:1fr;margin-bottom:18px}
+@media(min-width:640px){.grid{grid-template-columns:1fr 1fr}}
+label{display:grid;grid-template-columns:150px 1fr 54px;gap:10px;align-items:center;font-size:13px}
+label b{font-weight:500}label output{text-align:right;font-variant-numeric:tabular-nums;color:var(--mute)}
+input[type=range]{width:100%}
+.strip{display:flex;align-items:flex-end;gap:22px;padding:16px 18px;border-radius:12px;flex-wrap:wrap;margin-bottom:8px}
+.light{background:#fff;color:#1d1f1c}.dark{background:#111315;color:#ece6d8}
+.c{display:grid;justify-items:center;gap:6px}.c span{font:500 11px system-ui;color:#8a8d88}
+.c svg{display:block}.c.mark{margin-left:auto;padding-left:18px;border-left:1px solid rgba(128,128,128,.25)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+code{font:13px ui-monospace,monospace;background:rgba(128,128,128,.12);padding:6px 10px;border-radius:6px;user-select:all}
+button{font:500 13px system-ui;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+button.p{background:var(--accent);color:#fff;border-color:transparent}
+</style></head><body><div class="wrap">
+<h1>Logo tuner</h1>
+<p>Fork-stem K, plane merged. Drag the sliders; everything redraws at the real sizes. When it looks right, copy the settings line at the bottom and paste it to me.</p>
+<div class="grid" id="ctl"></div>
+<div class="strip light" id="sl"></div><div class="strip dark" id="sd"></div>
+<div class="row"><code id="out"></code><button id="copy">Copy settings</button><button id="reset">Reset</button><button class="p" id="dl">Download SVG</button></div>
+</div>
+<script>
+const P=[ // key, label, min, max, step, default
+ ['len','Body length',0,14,.1,5.5],      // extra fuselage length between the K and the plane
+ ['tilt','Tilt (0 = 45°)',-25,25,1,8],   // degrees added to the 45° climb; positive = flatter
+ ['size','Plane size',.4,.9,.01,.6],
+ ['wingLen','Wing span',4,14,.1,11],     // half-span of the stock plane, scaled
+ ['wingAt','Wings position',0,1,.01,.5], // along the body, 0 = tail end, 1 = nose
+ ['noseLen','Nose length',2,8,.1,4.5],
+ ['stroke','Stroke weight',3,5.5,.1,4.2],
+ ['stemH','Stem height',20,28,.1,24],
+ ['tines','Tine length',3,9,.1,6.2],
+ ['margin','Tile margin',1.5,5,.1,3],
+];
+const D=Object.fromEntries(P.map(p=>[p[0],p[5]]));
+let S={...D};
+const u=a=>[Math.cos(a*Math.PI/180),Math.sin(a*Math.PI/180)];
+function seg(p,q,w){const dx=q[0]-p[0],dy=q[1]-p[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,nx=-uy,ny=ux,h=w/2;
+ return [[p[0]+nx*h,p[1]+ny*h],[q[0]+nx*h,q[1]+ny*h],[q[0]-nx*h,q[1]-ny*h],[p[0]-nx*h,p[1]-ny*h]];}
+function plane(s){ // body/wings/nose only, no tail, tail end flat; wings are swept panels like the stock plane
+ const W=s.wingLen, at=s.wingAt, n=s.noseLen, noseY=2.5, bw=2.4, tailY=26.2;
+ const wy=tailY-(tailY-noseY-n)*at;            // wing root, front edge
+ const back=W*0.9, chord=2.3;                  // sweep: tips sit `back` behind the root; tip chord
+ return `M16 ${noseY} L${16+bw-.3} ${noseY+n} L${16+bw} ${wy} L${16+W} ${wy+back} L${16+W} ${wy+back+chord} L${16+bw} ${wy+chord+2.6} L${16+bw-.2} ${tailY} L${16-bw+.2} ${tailY} L${16-bw} ${wy+chord+2.6} L${16-W} ${wy+back+chord} L${16-W} ${wy+back} L${16-bw} ${wy} L${16-bw+.3} ${noseY+n} Z`;}
+function build(s,fill){
+ const W=s.stroke, polys=[]; const x0=0,top=0,bot=s.stemH; const tl=s.tines, tw=(W-1)/3;
+ for(let i=0;i<3;i++){const x=x0+i*(tw+.5);polys.push([[x,top],[x+tw,top],[x+tw,top+tl+.3],[x,top+tl+.3]]);}
+ polys.push([[x0,top+tl],[x0+W,top+tl],[x0+W,bot],[x0,bot]]);
+ const J=[x0+W-.4,bot*.525]; polys.push(seg(J,[J[0]+u(45)[0]*16.4,J[1]+u(45)[1]*16.4],W));
+ const ang=-45+s.tilt, [ux,uy]=u(ang), sc=s.size;
+ const anchor=[x0+W-1.2,J[1]]; const L=(26.2-16)*sc+s.len; const cx=anchor[0]+ux*L, cy=anchor[1]+uy*L;
+ polys.push(seg(anchor,[anchor[0]+ux*(L+.1),anchor[1]+uy*(L+.1)],4.6*sc));
+ const pd=plane(s); const nums=pd.match(/-?\d+\.?\d*/g).map(Number); const pts=[];
+ const c=Math.cos((ang+90)*Math.PI/180), sn=Math.sin((ang+90)*Math.PI/180);
+ for(let i=0;i<nums.length;i+=2){const x=(nums[i]-16)*sc,y=(nums[i+1]-16)*sc;pts.push([cx+x*c-y*sn,cy+x*sn+y*c]);}
+ const xs=polys.flat().map(p=>p[0]).concat(pts.map(p=>p[0])), ys=polys.flat().map(p=>p[1]).concat(pts.map(p=>p[1]));
+ const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+ const k=(32-2*s.margin)/Math.max(maxx-minx,maxy-miny), ox=(32-(maxx-minx)*k)/2-minx*k, oy=(32-(maxy-miny)*k)/2-miny*k;
+ let out=polys.map(P=>`<path d="M${P.map(p=>`${(p[0]*k+ox).toFixed(2)} ${(p[1]*k+oy).toFixed(2)}`).join(' L')} Z" fill="${fill}"/>`).join('');
+ out+=`<g transform="translate(${(cx*k+ox).toFixed(2)} ${(cy*k+oy).toFixed(2)}) rotate(${ang+90}) scale(${(sc*k).toFixed(4)}) translate(-16 -16)" fill="${fill}"><path d="${pd}"/></g>`;
+ const clear=((Math.min(...pts.map(p=>p[0]))-(x0+W))*k).toFixed(1);
+ return {inner:out,clear};
+}
+const tile=(inner,sz)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${sz}" height="${sz}"><rect width="32" height="32" rx="8" fill="#0d6b63"/>${inner}</svg>`;
+const mark=(inner,sz)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${sz}" height="${sz}">${inner}</svg>`;
+function render(){
+ const t=build(S,'#fff'), m=build(S,'currentColor');
+ const cells=[16,24,32,48,96,192].map(z=>`<div class="c"><span>${z}</span>${tile(t.inner,z)}</div>`).join('')+`<div class="c mark"><span>mark</span>${mark(m.inner,120)}</div>`;
+ sl.innerHTML=cells; sd.innerHTML=cells;
+ out.textContent=P.map(p=>`${p[0]}=${S[p[0]]}`).join(' ')+`  (wing clearance ${t.clear}px at 32)`;
+ for(const p of P){document.getElementById('o_'+p[0]).value=S[p[0]];}
+}
+ctl.innerHTML=P.map(p=>`<label><b>${p[1]}</b><input type="range" id="r_${p[0]}" min="${p[2]}" max="${p[3]}" step="${p[4]}" value="${p[5]}"><output id="o_${p[0]}"></output></label>`).join('');
+for(const p of P){document.getElementById('r_'+p[0]).oninput=e=>{S[p[0]]=+e.target.value;render();};}
+reset.onclick=()=>{S={...D};for(const p of P)document.getElementById('r_'+p[0]).value=D[p[0]];render();};
+copy.onclick=()=>{navigator.clipboard?.writeText(out.textContent).catch(()=>{});copy.textContent='Copied';setTimeout(()=>copy.textContent='Copy settings',1200);};
+dl.onclick=()=>{const b=new Blob([tile(build(S,'#fff').inner)],{type:'image/svg+xml'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='kosher-travel-logo.svg';a.click();};
+try{const q=new URLSearchParams(location.hash.slice(1));for(const p of P)if(q.has(p[0])){S[p[0]]=+q.get(p[0]);document.getElementById('r_'+p[0]).value=S[p[0]];}}catch(e){}
+render();
+</script></body></html>
