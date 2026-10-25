@@ -138,3 +138,46 @@ insert into public.reviews (user_id, airline, origin_city, rating, author_name)
 values ('22222222-2222-2222-2222-222222222222', 'El Al', 'JFK', 3, 'Admin Abe');
 select 'attempted byline "Admin Abe" stored as: ' || author_name from public.reviews where origin_city = 'JFK';
 rollback;
+
+\echo ''
+\echo '=== 13. Reference tables: anyone can read airlines and flights; nobody but the service role writes flights ==='
+begin;
+set local role anon;
+select 'anon sees ' || count(*) || ' airlines' from public.airlines;
+select 'anon sees ' || count(*) || ' flights' from public.flights;
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+\echo '   -- a signed-in user inserting a flight (expect: permission denied):'
+insert into public.flights (airline_iata, number) values ('LY', '26');
+rollback;
+
+\echo ''
+\echo '=== 14. Site settings: everyone reads, only an admin writes (expect: one policy violation) ==='
+begin;
+set local role anon;
+select 'anon reads design = ' || (value->>'skin') from public.site_settings where key = 'design';
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+update public.site_settings set value = '{"skin":"board","layout":"table"}' where key = 'design';
+select 'after a normal user tries: skin = ' || (value->>'skin') from public.site_settings where key = 'design';
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true);
+update public.site_settings set value = '{"skin":"board","layout":"table"}' where key = 'design';
+select 'after the admin: skin = ' || (value->>'skin') from public.site_settings where key = 'design';
+rollback;
+
+\echo ''
+\echo '=== 15. A review posted with an airline code gets the airline name filled in ==='
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+insert into public.reviews (user_id, airline, airline_iata, flight_number, origin_city, rating)
+values ('22222222-2222-2222-2222-222222222222', 'whatever the browser sent', 'LY', 'LY 26', 'Newark (EWR)', 4);
+select 'stored airline: ' || airline || ' (' || airline_iata || ')' from public.reviews where airline_iata = 'LY';
+reset role;
+set local role anon;
+select 'public view shows airline_name = ' || airline_name from public.reviews_public where airline_iata = 'LY';
+rollback;

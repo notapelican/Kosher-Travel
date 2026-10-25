@@ -32,6 +32,9 @@ fail say so in their heading — an `ERROR: new row violates row-level security 
 10. Scores outside 1–5 are rejected
 11. Photo uploads are confined to the uploader's own folder
 12. `author_name` cannot be spoofed by writing it directly
+13. Anyone can read airlines and flights; only the service role writes flights
+14. Everyone reads site settings; only an admin writes them
+15. A review posted with an airline code gets the airline name filled in
 
 The last one matters: bylines are set by a database trigger, not by the browser, so a crafted
 API call cannot post under someone else's name.

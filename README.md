@@ -134,6 +134,26 @@ update public.profiles set is_admin = true where email = 'you@example.com';
 
 Reload the site and an **Admin** link appears in the header.
 
+### 6. Flight lookup (optional, recommended)
+
+The submit form and the "no reports yet" prompt can check that a flight really exists and pull
+its route, operating carrier and aircraft. That needs a data provider key, which must not live
+in the browser, so it runs in a small Supabase Edge Function in
+[`supabase/functions/flight-lookup/`](supabase/functions/flight-lookup). Results are cached in
+the `flights` table, so each flight number costs one provider call ever, then nothing.
+
+1. Sign up for [AeroDataBox on RapidAPI](https://rapidapi.com/aedbx-aedbx/api/aerodatabox)
+   (free tier) and copy your RapidAPI key.
+2. In Supabase: **Edge Functions → Secrets**, add `RAPIDAPI_KEY` with that value.
+3. **Edge Functions → Deploy a new function → Via editor**, name it `flight-lookup`, paste the
+   contents of `supabase/functions/flight-lookup/index.ts`, deploy. (Or with the CLI:
+   `supabase functions deploy flight-lookup`.)
+4. Leave **Verify JWT** on: the site calls the function with the anon key, which is a valid JWT,
+   so signed-out visitors can search while random callers cannot.
+
+Without the function the site still works; it just cannot validate flights, and the submit
+form falls back to accepting any flight number.
+
 ## Logo
 
 The mark is a K whose stem is a fork, three tines at the top, and whose upper arm is a plane
