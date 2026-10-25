@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kosher Travel — Option A: The Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Direction: an arrivals-hall departures board. The board IS the page: one row per flight,
+   what was on the tray, which seal, how you were treated. Ink black, amber flap type. */
+:root{
+  --bg:#101214; --board:#15181c; --row:#1a1e23; --row-hover:#20252b; --line:#262b32;
+  --ink:#ede7d9; --ink-2:#b5afa2; --mute:#7a756c;
+  --amber:#f3b63b; --amber-ink:#1a1200; --amber-dim:#6b5420;
+  --good:#8ad3a4; --bad:#f08a6b;
+  --d:"Barlow Condensed",Impact,"Arial Narrow",sans-serif;
+  --m:"IBM Plex Mono",Menlo,Consolas,monospace;
+  --f:"Barlow",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.45}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ribbon{font:600 11px/1 var(--m);letter-spacing:.12em;text-transform:uppercase;background:var(--amber);color:var(--amber-ink);text-align:center;padding:7px 10px}
+
+header{display:flex;align-items:center;justify-content:space-between;height:56px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font:700 20px var(--d);letter-spacing:.04em;text-transform:uppercase}
+.brand svg{width:26px;height:26px;color:var(--amber)}
+nav{display:flex;gap:4px}
+nav a{white-space:nowrap;font:500 13px var(--m);text-transform:uppercase;letter-spacing:.08em;padding:8px 12px;color:var(--ink-2)}
+nav a.on{color:var(--amber)}
+nav a.btn{border:1px solid var(--amber);color:var(--amber)}
+
+.hero{text-align:center;padding:40px 0 22px}
+.hero h1{margin:0;font:700 clamp(44px,8vw,96px)/.95 var(--d);text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--amber)}
+.hero .tick{margin-top:14px;font:400 13px var(--m);color:var(--ink-2);letter-spacing:.06em;display:flex;justify-content:center;gap:0;flex-wrap:wrap}
+.hero .tick span{padding:0 14px;border-left:1px solid var(--line)}
+.hero .tick span:first-child{border:0}
+.hero .tick b{color:var(--amber);font-weight:600}
+
+.sel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:18px 0 6px}
+.sel label{display:block;font:600 10px var(--m);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:5px}
+.sel input,.sel select{width:100%;height:46px;background:var(--board);border:1px solid var(--line);color:var(--ink);font:600 22px var(--d);text-transform:uppercase;letter-spacing:.06em;padding:0 12px;border-radius:0}
+.sel input::placeholder{color:var(--mute)}
+.sel select{font-size:18px}
+.sel .go{align-self:end}
+.sel .go button{width:100%;height:46px;background:var(--amber);color:var(--amber-ink);border:0;font:700 18px var(--d);text-transform:uppercase;letter-spacing:.1em;cursor:pointer}
+@media(min-width:760px){.sel{grid-template-columns:1fr 1fr 1.2fr 1.4fr .8fr}}
+
+/* the board */
+.board{margin-top:20px;background:var(--board);border:1px solid var(--line)}
+.board .head,.board .r{display:grid;grid-template-columns:1.5fr .9fr 1.1fr 1.3fr .9fr 1fr 1fr 1fr;gap:0;align-items:center}
+.board .head{font:600 10px var(--m);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);padding:10px 14px;border-bottom:1px solid var(--line)}
+.board .r{padding:0 14px;min-height:58px;border-bottom:1px solid var(--line);background:var(--row);transition:background .15s}
+.board .r:nth-child(odd){background:var(--board)}
+.board .r:hover{background:var(--row-hover)}
+.board .r:last-child{border-bottom:0}
+.al{font:700 22px var(--d);text-transform:uppercase;letter-spacing:.03em;line-height:1}
+.al small{display:block;font:400 11px var(--m);color:var(--mute);text-transform:none;letter-spacing:.04em;margin-top:4px}
+.flt{font:600 15px var(--m);letter-spacing:.04em}
+.loaded{font:500 15px var(--f);color:var(--ink-2)}
+.seal{font:400 12px var(--m);color:var(--ink-2);letter-spacing:.02em}
+.flap{display:inline-flex;gap:2px}
+.flap i{font:600 18px/1 var(--m);font-style:normal;background:#0b0c0e;color:var(--amber);padding:6px 5px;border-radius:2px;box-shadow:inset 0 -1px 0 #000,inset 0 1px 0 #2a2a2a;min-width:20px;text-align:center;position:relative}
+.flap i::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.6)}
+.flap i.dim{color:var(--amber-dim)}
+.dots{display:inline-flex;gap:4px;align-items:center}
+.dots b{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--amber-dim);display:block}
+.dots b.on{background:var(--amber);border-color:var(--amber)}
+.dots.na{font:400 11px var(--m);color:var(--mute)}
+.last{font:400 12px var(--m);color:var(--ink-2)}
+.last em{font-style:normal;color:var(--mute)}
+.sort{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.sort a{font:500 11px var(--m);letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border:1px solid var(--line);color:var(--ink-2)}
+.sort a.on{border-color:var(--amber);color:var(--amber)}
+
+@media(max-width:759px){
+  nav a:not(.btn){display:none}
+  .board .head{display:none}
+  .board .r{grid-template-columns:1fr 1fr;grid-template-areas:"al score" "flt loaded" "seal seal" "dots dots" "last last";row-gap:8px;padding:14px}
+  .r>*{min-width:0}
+  .r .al{grid-area:al}.r .flt{grid-area:flt}.r .loaded{grid-area:loaded;text-align:right}.r .seal{grid-area:seal}.r .score{grid-area:score;justify-self:end}
+  .r .dd{grid-area:dots;display:flex;gap:16px}
+  .r .last{grid-area:last}
+  .r .dd .dots::before{content:attr(data-l);font:600 10px var(--m);letter-spacing:.1em;color:var(--mute);margin-right:6px}
+}
+@media(min-width:760px){.r .dd{display:contents}}
+
+/* latest reports strip */
+.latest{margin:34px 0 60px}
+.latest h2{font:700 16px var(--m);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 12px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.rep{background:var(--board);padding:0;display:grid;grid-template-rows:150px auto}
+.rep img{width:100%;height:150px;object-fit:cover;display:block;filter:saturate(.85) contrast(1.05)}
+.rep .ph{height:150px;background:#1d2126 repeating-linear-gradient(45deg,transparent 0 8px,rgba(255,255,255,.02) 8px 9px)}
+.rep .b{padding:12px 14px}
+.rep .b h3{margin:0;font:700 20px var(--d);text-transform:uppercase;letter-spacing:.03em}
+.rep .b h3 span{color:var(--amber)}
+.rep .b p{margin:6px 0 0;font-size:14px;color:var(--ink-2)}
+.rep .b .meta{margin-top:8px;font:400 11px var(--m);color:var(--mute)}
+footer{border-top:1px solid var(--line);padding:18px 0 40px;font:400 12px var(--m);color:var(--mute);text-align:center}
+</style>
+</head>
+<body>
+<div class="ribbon">Design mockup · sample data, not real ratings</div>
+<div class="wrap">
+<header>
+  <a class="brand" href="#"><svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 3.2c1.3 0 2.1 1.6 2.1 3.7v14.3l1.9 2.4v2L16 24.3l-4 1.3v-2l1.9-2.4V6.9c0-2.1.8-3.7 2.1-3.7Z"/><path d="M13.4 11.6H6.9v1.4H2.4v1.3h4.5v1.4h6.5z"/><path d="M18.6 11.9h5.1c3 0 5.6 1 5.6 2s-2.6 2-5.6 2h-5.1z"/></svg>Kosher Travel</a>
+  <nav><a class="on" href="#">Board</a><a href="#">Airlines</a><a href="#">Report a meal</a><a class="btn" href="#">Sign in</a></nav>
+</header>
+
+<section class="hero">
+  <h1>What's on <em>the tray</em></h1>
+  <div class="tick"><span><b>142</b> reports</span><span><b>48</b> routes</span><span><b>23</b> airlines</span><span>updated <b>14 min</b> ago</span></div>
+</section>
+
+<form class="sel" onsubmit="return false">
+  <div><label for="a-from">From</label><input id="a-from" placeholder="JFK" value="JFK"></div>
+  <div><label for="a-to">To</label><input id="a-to" placeholder="TLV" value="TLV"></div>
+  <div><label for="a-al">Airline</label><select id="a-al"><option>Any airline</option><option>El Al</option><option>Delta</option><option>United</option></select></div>
+  <div><label for="a-h">Hechsher</label><select id="a-h"><option>Any hechsher</option><option>OU</option><option>Kof-K</option><option>KLBD</option></select></div>
+  <div class="go"><button type="submit">Show board</button></div>
+</form>
+<div class="sort"><a class="on" href="#">Newest</a><a href="#">Best meal</a><a href="#">Best treatment</a><a href="#">Kosher handling</a><a href="#">Most reports</a></div>
+
+<section class="board" aria-label="Meal reports by flight">
+  <div class="head"><span>Airline</span><span>Flight</span><span>Loaded in</span><span>Seal</span><span>Meal</span><span>Respect</span><span>Kosher care</span><span>Last report</span></div>
+
+  <div class="r">
+    <div class="al">El Al<small>JFK → TLV · 31 reports</small></div>
+    <div class="flt">LY 26</div>
+    <div class="loaded">New York</div>
+    <div class="seal">OU · Borenstein</div>
+    <div class="score flap"><i>4</i><i>.</i><i>3</i></div>
+    <div class="dd">
+      <div class="dots" data-l="Respect"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b></div>
+      <div class="dots" data-l="Care"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b></div>
+    </div>
+    <div class="last">2d ago <em>· Sarah S.</em></div>
+  </div>
+
+  <div class="r">
+    <div class="al">United<small>EWR → TLV · 18 reports</small></div>
+    <div class="flt">UA 90</div>
+    <div class="loaded">Newark</div>
+    <div class="seal">Kof-K</div>
+    <div class="score flap"><i>3</i><i>.</i><i>4</i></div>
+    <div class="dd">
+      <div class="dots" data-l="Respect"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b></b></div>
+      <div class="dots" data-l="Care"><b class="on"></b><b class="on"></b><b class="on"></b><b></b><b></b></div>
+    </div>
+    <div class="last">5d ago <em>· Anonymous</em></div>
+  </div>
+
+  <div class="r">
+    <div class="al">Delta<small>JFK → TLV · 12 reports</small></div>
+    <div class="flt">DL 234</div>
+    <div class="loaded">New York</div>
+    <div class="seal">OU</div>
+    <div class="score flap"><i>3</i><i>.</i><i>9</i></div>
+    <div class="dd">
+      <div class="dots" data-l="Respect"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b></b></div>
+      <div class="dots" data-l="Care"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b></b></div>
+    </div>
+    <div class="last">1w ago <em>· M. Katz</em></div>
+  </div>
+
+  <div class="r">
+    <div class="al">British Airways<small>LHR → JFK · 9 reports</small></div>
+    <div class="flt">BA 117</div>
+    <div class="loaded">London</div>
+    <div class="seal">KLBD · Hermolis</div>
+    <div class="score flap"><i>3</i><i>.</i><i>8</i></div>
+    <div class="dd">
+      <div class="dots" data-l="Respect"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b></b></div>
+      <div class="dots" data-l="Care"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b></b></div>
+    </div>
+    <div class="last">1w ago <em>· Anonymous</em></div>
+  </div>
+
+  <div class="r">
+    <div class="al">Lufthansa<small>FRA → JFK · 14 reports</small></div>
+    <div class="flt">LH 401</div>
+    <div class="loaded">Frankfurt</div>
+    <div class="seal">Varies · see reports</div>
+    <div class="score flap"><i>2</i><i>.</i><i>9</i></div>
+    <div class="dd">
+      <div class="dots" data-l="Respect"><b class="on"></b><b class="on"></b><b class="on"></b><b></b><b></b></div>
+      <div class="dots" data-l="Care"><b class="on"></b><b class="on"></b><b class="on"></b><b></b><b></b></div>
+    </div>
+    <div class="last">2w ago <em>· D. Mizrahi</em></div>
+  </div>
+
+  <div class="r">
+    <div class="al">Turkish Airlines<small>IST → JFK · 6 reports</small></div>
+    <div class="flt">TK 1</div>
+    <div class="loaded">Istanbul</div>
+    <div class="seal">Unmarked on 4 of 6</div>
+    <div class="score flap"><i>2</i><i>.</i><i>6</i></div>
+    <div class="dd">
+      <div class="dots" data-l="Respect"><b class="on"></b><b class="on"></b><b class="on"></b><b></b><b></b></div>
+      <div class="dots na" data-l="Care">not enough reports</div>
+    </div>
+    <div class="last">3w ago <em>· Anonymous</em></div>
+  </div>
+</section>
+
+<section class="latest">
+  <h2>Latest from the tray</h2>
+  <div class="strip">
+    <article class="rep"><img src="img/tray-1.jpg" alt="Sealed chicken meal on a tray table"><div class="b"><h3>El Al LY 26 <span>4/5</span></h3><p>Chicken with rice, warm challah roll. Seal intact, crew asked before opening.</p><div class="meta">OU · NEW YORK · SARAH S. · 2D AGO</div></div></article>
+    <article class="rep"><img src="img/tray-2.jpg" alt="Sealed brisket meal under cabin light"><div class="b"><h3>United UA 90 <span>3/5</span></h3><p>Brisket and potatoes, lukewarm. Took two asks to get it served with the rest of the cabin.</p><div class="meta">KOF-K · NEWARK · ANONYMOUS · 5D AGO</div></div></article>
+    <article class="rep"><img src="img/tray-3.jpg" alt="Cold plate with salmon and bagel"><div class="b"><h3>British Airways BA 117 <span>4/5</span></h3><p>Cold plate: salmon, bagel, fruit. Every item sealed separately with its own sticker.</p><div class="meta">KLBD · LONDON · ANONYMOUS · 1W AGO</div></div></article>
+  </div>
+</section>
+</div>
+<footer>Traveler-reported. Confirm the seal in your hand: caterers and certifications change without notice.</footer>
+</body>
+</html>
