@@ -130,18 +130,17 @@ Reload the site and an **Admin** link appears in the header.
 
 ## Logo
 
-The mark is a K whose upper arm is a plane climbing out of the letter. Stem and leg share one
-stroke weight with flat ends, and the plane sits on the K's diagonal, clear of the joint, so
-it reads as a letter first and a plane second. It is defined once as `LOGO` in
-[`js/app.js`](js/app.js) and reused for the header badge and the empty states, as plain inline
-SVG in `currentColor`, so it inherits whatever colour it sits on and needs no image file. The
-favicon is the same mark on the brand tile as a `data:` URI in each page's `<head>`, with the
-plane's tail fin dropped, since at 16px the fin is only noise; the `theme-color` beside it
-colours mobile browser chrome.
+The mark is a K whose stem is a fork, three tines at the top, and whose upper arm is a plane
+climbing out of the letter: body, wings and nose, with no tail, so the plane is the K's arm
+rather than an icon placed beside it. The site is kosher meals in the air, and the mark says
+both halves. It is defined once as `LOGO` in [`js/app.js`](js/app.js) and reused for the
+header badge and the empty states, as plain inline SVG in `currentColor`, so it inherits
+whatever colour it sits on and needs no image file. The favicon is the same mark on the brand
+tile as a `data:` URI in each page's `<head>`, beside a `theme-color` for mobile browser chrome.
 
 The earlier mark, a plane seen from above with fork-and-knife wings, read as a cross at
-favicon size: straight wings at mid-height make a plus sign. Swept wings and the letterform fix
-that. The design review that led here, with the alternatives, is under `design-review/logos/`.
+favicon size: straight wings at mid-height make a plus sign. The design review that led to the
+current mark, with the alternatives and a slider tuner for it, is under `design-review/logos/`.
 
 ## Layout
 
