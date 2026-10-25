@@ -106,16 +106,19 @@ In Supabase under **Authentication → Providers**:
   Web application). Add `https://<project-ref>.supabase.co/auth/v1/callback` as the
   authorized redirect URI.
 
-Then under **Authentication → URL Configuration**, add your GitHub Pages URL
-(e.g. `https://notapelican.github.io/Kosher-Travel/`) to **Site URL** and **Redirect URLs**,
-plus `http://localhost:8000/` if you want to develop locally.
+Then under **Authentication → URL Configuration**, set **Site URL** to `https://koshertravel.app/`
+and add it to **Redirect URLs** too, plus `http://localhost:8000/` if you want to develop locally.
 
 ### 4. Publish
 
-In this repo: **Settings → Pages → Build and deployment → Deploy from a branch**, choose your
-branch and the `/ (root)` folder. GitHub serves it at
-`https://<user>.github.io/Kosher-Travel/` within a minute or two. A custom domain is free too
-(you only pay whatever your registrar charges for the name).
+In this repo: **Settings → Pages → Build and deployment → Deploy from a branch**, choose `main`
+and the `/ (root)` folder. The `CNAME` file at the repo root tells GitHub to serve the site at
+`https://koshertravel.app/`. At the registrar (Cloudflare), the apex needs four `A` records to
+GitHub Pages (`185.199.108.153`, `.109.153`, `.110.153`, `.111.153`) and `www` a `CNAME` to
+`notapelican.github.io`, both with Cloudflare's proxy **off** (DNS only) so GitHub can issue the
+certificate. Then in **Settings → Pages** confirm the custom domain shows a green check and tick
+**Enforce HTTPS**. `.app` domains are HTTPS-only by browser policy, so the site will not load
+until that certificate exists.
 
 ### 5. Make yourself an admin
 
