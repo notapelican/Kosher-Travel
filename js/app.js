@@ -483,7 +483,13 @@ export function reviewCard(review, { actions = "", bylineNote = "", full = false
     .map((p) => `<img src="${esc(photoUrl(p))}" alt="Photo of the meal" loading="lazy"
                       decoding="async" data-full="${esc(photoUrl(p))}">`)
     .join("");
-  const photos = full && several ? "" : photoTags(photoPaths);
+  // A list card shows at most four photos; the fourth says how many more the report has.
+  const LIST_PHOTOS = 4;
+  const photos = full
+    ? (several ? "" : photoTags(photoPaths))
+    : photoTags(photoPaths.slice(0, photoPaths.length > LIST_PHOTOS ? LIST_PHOTOS - 1 : LIST_PHOTOS))
+      + (photoPaths.length > LIST_PHOTOS
+        ? `<span class="photo-more" data-more="+${photoPaths.length - LIST_PHOTOS + 1}">${photoTags([photoPaths[LIST_PHOTOS - 1]])}</span>` : "");
 
   // Several meals: one line each with its own score; the seal is repeated
   // per meal only when the meals do not all carry the same one.
@@ -547,16 +553,43 @@ export function reviewCard(review, { actions = "", bylineNote = "", full = false
         <div class="score-badge">${badge}</div>
       </div>
       ${tags ? `<div class="meta">${tags}</div>` : ""}
-      ${several ? "" : dietBadges(only.diets)}
-      ${!several && only.comment ? `<p class="comment">${esc(only.comment)}</p>` : ""}
-      ${mealList}
-      ${experience}
+      <div class="review-body">
+        ${several ? "" : dietBadges(only.diets)}
+        ${!several && only.comment ? `<p class="comment">${esc(only.comment)}</p>` : ""}
+        ${mealList}
+        ${experience}
+      </div>
+      ${full ? "" : `<a class="review-more" href="${esc(reviewHref(review))}">More</a>`}
       ${photos ? `<div class="photos">${photos}</div>` : ""}
       <div class="byline"><b>${esc(byline)}</b>${
         bylineNote ? ` <span class="hint">${esc(bylineNote)}</span>` : ""} · ${esc(formatDate(review.created_at))}</div>
       ${review.is_hidden ? `<div class="hidden-flag">Hidden from the public list</div>` : ""}
       ${actions ? `<div class="row-actions">${actions}</div>` : ""}
     </article>`;
+}
+
+/**
+ * Long reports are cut to a fixed height in lists, faded out, with a More
+ * link to the full report. Which cards need it depends on the width they are
+ * laid out at, so it is re-checked whenever a card's body changes size (a
+ * resize, a design switch) and once web fonts have loaded.
+ */
+const clampWatch = typeof ResizeObserver === "function"
+  ? new ResizeObserver((entries) => { for (const entry of entries) markClamped(entry.target); })
+  : null;
+
+function markClamped(body) {
+  const card = body.closest(".review");
+  if (!card) return;
+  card.classList.toggle("is-clamped", body.scrollHeight > body.clientHeight + 2);
+}
+
+export function clampReviews(root = document) {
+  for (const body of root.querySelectorAll(".reviews .review-body")) {
+    markClamped(body);
+    clampWatch?.observe(body);
+  }
+  document.fonts?.ready.then(() => { for (const body of root.querySelectorAll(".reviews .review-body")) markClamped(body); });
 }
 
 /**

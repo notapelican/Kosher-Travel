@@ -161,14 +161,14 @@ html[data-reports="grid"] .reviews { grid-template-columns: repeat(auto-fill, mi
 html[data-reports="grid"] .reviews .review { display: flex; flex-direction: column; gap: var(--sp-2); }
 html[data-reports="grid"] .reviews .review .photos { order: -1; margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) 4px; display: grid; grid-template-columns: 1fr; }
 html[data-reports="grid"] .reviews .review .photos img { width: 100%; height: 170px; aspect-ratio: auto; border-radius: var(--r-lg) var(--r-lg) 0 0; }
-html[data-reports="grid"] .reviews .review .photos img:not(:first-child) { display: none; }
+html[data-reports="grid"] .reviews .review .photos > :not(:first-child) { display: none; }
 @media (min-width: 600px) { html[data-reports="grid"] .reviews .review .photos { margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-5)) 4px; } }
 
 html[data-reports="strip"] .reviews { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
 html[data-reports="strip"] .reviews .review { border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; gap: var(--sp-2); }
 html[data-reports="strip"] .reviews .review .photos { order: -1; margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) 4px; display: grid; grid-template-columns: 1fr; }
 html[data-reports="strip"] .reviews .review .photos img { width: 100%; height: 150px; aspect-ratio: auto; border-radius: 0; }
-html[data-reports="strip"] .reviews .review .photos img:not(:first-child) { display: none; }
+html[data-reports="strip"] .reviews .review .photos > :not(:first-child) { display: none; }
 @media (min-width: 600px) { html[data-reports="strip"] .reviews .review .photos { margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-5)) 4px; } }
 
 /* cards in columns are phone-narrow at any width: keep the score label on its own line */
@@ -183,7 +183,7 @@ html[data-reports="list"] .reviews .review { border: 0; border-radius: 0; box-sh
   html[data-reports="list"] .reviews .review > * { grid-column: 2; }
   html[data-reports="list"] .reviews .review .photos { grid-column: 1; grid-row: 1 / span 6; align-self: start; display: grid; grid-template-columns: 1fr; margin-top: 0; }
   html[data-reports="list"] .reviews .review .photos img { width: 120px; height: 90px; aspect-ratio: auto; }
-  html[data-reports="list"] .reviews .review .photos img:not(:first-child) { display: none; }
+  html[data-reports="list"] .reviews .review .photos > :not(:first-child) { display: none; }
 }
 
 /* ==========================================================================

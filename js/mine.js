@@ -1,6 +1,6 @@
 import {
   supabase, isConfigured, renderHeader, renderSetupWarning,
-  openAuthDialog, reviewCard, enableReviewLinks, notify, emptyState, PHOTO_BUCKET, reportPhotoPaths, $
+  openAuthDialog, reviewCard, enableReviewLinks, clampReviews, notify, emptyState, PHOTO_BUCKET, reportPhotoPaths, $
 } from "./app.js";
 
 const list = $("#reviews");
@@ -58,6 +58,7 @@ async function load() {
       })).join("")
     : emptyState("No ratings yet",
         `<a href="submit.html">Rate your first meal.</a>`);
+  clampReviews(list);
 }
 
 list.addEventListener("click", async (event) => {

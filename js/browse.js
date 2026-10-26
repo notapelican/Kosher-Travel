@@ -1,5 +1,5 @@
 import {
-  supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard, enableReviewLinks,
+  supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard, enableReviewLinks, clampReviews,
   notify, fillSelect, emptyState, airlineLogo, loadAirlines, lookupFlight, parseFlightNumber,
   currentDesign, photoUrl, reviewHref, formatDate, timeAgo, stars, esc, LOGO, $, $$
 } from "./app.js";
@@ -276,6 +276,23 @@ async function reload() {
   if (!countEl.hidden) renderCount(f);
 }
 
+/**
+ * Reports with photos are shown first, without changing what a sort means:
+ * on Newest, each loaded batch lists its photo reports first; on the score
+ * sorts, photo reports come first among reports with the same score.
+ */
+const SORT_COLUMN = { best: "rating", worst: "rating", respect: "respect_score", care: "kosher_care_score" };
+function preferPhotos(rows, sortKey) {
+  const column = SORT_COLUMN[sortKey];
+  // rows arrive sorted, so equal scores are next to each other: number the runs
+  let group = 0;
+  const keyed = rows.map((r, i) => {
+    if (column && i > 0 && Number(r[column] ?? -1) !== Number(rows[i - 1][column] ?? -1)) group += 1;
+    return { r, i, group, bare: r.photos?.length ? 0 : 1 };
+  });
+  return keyed.sort((a, b) => a.group - b.group || a.bare - b.bare || a.i - b.i).map(({ r }) => r);
+}
+
 async function loadPage(f = filters()) {
   if (loading) return;
   loading = true;
@@ -288,9 +305,10 @@ async function loadPage(f = filters()) {
   moreBtn.disabled = false;
   if (error) return notify(msg, `Could not load ratings: ${error.message}`, "error");
 
-  const rows = exactFlight(data || [], f);
+  const rows = preferPhotos(exactFlight(data || [], f), f.sort);
   if (page === 0) { total = f.flight ? rows.length : (count ?? rows.length); firstPage = rows; renderFeatured(); }
   list.insertAdjacentHTML("beforeend", rows.map((r) => reviewCard(r)).join(""));
+  clampReviews(list);
   page += 1;
   moreBtn.hidden = (data || []).length < PAGE_SIZE;
   renderCount(f);

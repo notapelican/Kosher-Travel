@@ -1,5 +1,5 @@
 import {
-  supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard, enableReviewLinks,
+  supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard, enableReviewLinks, clampReviews,
   notify, formatDate, esc, PHOTO_BUCKET, PRESETS, currentDesign, designReady, saveDesign, reportPhotoPaths, $
 } from "./app.js";
 
@@ -107,6 +107,7 @@ async function loadReviews() {
                   <button class="small danger" data-delete="${review.id}">Delete</button>`
       })).join("")
     : `<div class="empty">No ratings match.</div>`;
+  clampReviews(list);
 }
 
 list.addEventListener("click", async (event) => {

@@ -638,6 +638,27 @@ input[type="file"] { padding: 10px 13px; background: var(--surface-2); cursor: p
 .review-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
 @media (hover: hover) { .review[data-href]:hover .review-link { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; } }
 
+/* long reports are cut short in lists, with a More link to the whole report */
+.reviews .review-body { max-height: 230px; overflow: hidden; }
+.reviews .review.is-clamped .review-body {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 64px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 64px), transparent);
+}
+.review-more { display: none; }
+.reviews .review.is-clamped .review-more {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;
+  font-size: 13.5px; font-weight: 640; color: var(--accent); text-decoration: none;
+}
+.reviews .review.is-clamped .review-more::after { content: "→"; transition: transform .15s; }
+@media (hover: hover) { .reviews .review.is-clamped .review-more:hover::after { transform: translateX(3px); } }
+.photos .photo-more { position: relative; display: block; }
+.photos .photo-more img { display: block; width: 100%; }
+.photos .photo-more::after {
+  content: attr(data-more); position: absolute; inset: 0; display: grid; place-items: center;
+  border-radius: var(--r-md); background: rgba(0, 0, 0, .5); color: #fff; font-weight: 700; font-size: 18px;
+  pointer-events: none;
+}
+
 /* a report's own page */
 .review.full { padding: var(--sp-5); }
 .review.full h3 { font-size: 22px; }

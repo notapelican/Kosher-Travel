@@ -107,6 +107,11 @@ picked, with the same icons. The list, labels and icons are `DIETS` in
 opens the same chips; picking several finds reports with a meal marked as all of them (so
 "gluten free" + "tree-nut free" needs one meal that is both, not one of each).
 
+**Lists stay compact.** In a list, a long report is cut to a fixed height and faded, with a
+**More** link to the whole report, and shows at most four photos (the last one says "+N" when
+there are more). Reports with photos are listed first: on Newest within each batch loaded, on
+the score sorts among reports with the same score.
+
 **Each report has its own page**, `review.html?id=…`. Clicking anywhere on a card, in any list
 and any design, opens it (Ctrl/Cmd-click opens a new tab; Edit and Delete buttons keep their
 own behavior). The page shows every meal with its own photos, which open full size there, and
