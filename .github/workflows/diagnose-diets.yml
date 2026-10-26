@@ -1,0 +1,26 @@
+# Temporary: checks the live diet data and the diet filter query. Runs only
+# on the working branch; removed once the diet filter is confirmed.
+name: Diagnose diet filter
+
+on:
+  push:
+    branches: [claude/modest-keller-c5a6vb]
+    paths: [.github/workflows/diagnose-diets.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Query the public view
+        run: |
+          url=$(sed -n 's/^export const SUPABASE_URL *= *"\([^"]*\)".*/\1/p' js/config.js)
+          key=$(sed -n 's/^export const SUPABASE_ANON_KEY *= *"\([^"]*\)".*/\1/p' js/config.js)
+          q() { echo; echo "### $1"; curl -sS -g --max-time 60 -H "apikey: $key" -H "Authorization: Bearer $key" "$url/rest/v1/$2"; echo; }
+          q "columns of the view (one row)" "reviews_public?select=*&limit=1"
+          q "recent reports: id, flight, diets, each meal's diets" "reviews_public?select=id,flight_number,airline,diets,meals->0->diets,meals->1->diets,created_at&order=created_at.desc&limit=25"
+          q "diet filter as the site sends it: gluten free" "reviews_public?select=id,flight_number,diets&diets=ov.%7Bgluten_free,coeliac%7D"
+          q "count of all reports" "reviews_public?select=id&limit=1000"
