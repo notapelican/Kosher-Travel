@@ -74,7 +74,7 @@ insert into public.airlines (iata, icao, name) values
   ('JX', 'SJX', 'STARLUX Airlines'),
   ('SY', 'SCX', 'Sun Country Airlines'),
   ('XQ', 'SXS', 'SunExpress'),
-  ('TW', 'TWB', "T'way Air"),
+  ('TW', 'TWB', 'T''way Air'),
   ('TG', 'THA', 'Thai Airways'),
   ('HV', 'TRA', 'Transavia'),
   ('TO', 'TVF', 'Transavia France'),
