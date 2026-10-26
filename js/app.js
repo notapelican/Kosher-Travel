@@ -1,5 +1,5 @@
 import { createClient } from "./vendor/supabase.js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY, SITE_NAME } from "./config.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, SITE_NAME, GOOGLE_CLIENT_ID } from "./config.js";
 import { EXPERIENCE_SCORES } from "./options.js";
 
 export const isConfigured =
@@ -119,6 +119,55 @@ export async function signInWithGoogle() {
   if (error) throw error;
 }
 
+/**
+ * Google sign-in without leaving the site. Google Identity Services renders
+ * its own button; when the visitor picks an account we hand the resulting ID
+ * token to Supabase. The consent screen then names this domain rather than
+ * the Supabase project, because nothing redirects there. Supabase requires a
+ * nonce: the raw value goes to Supabase, its SHA-256 hash to Google.
+ */
+let gisLoading;
+function loadGoogleIdentity() {
+  if (window.google?.accounts?.id) return Promise.resolve();
+  return (gisLoading ??= new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error("Could not load Google sign-in."));
+    document.head.append(script);
+  }));
+}
+
+async function sha256Hex(text) {
+  const bytes = new TextEncoder().encode(text);
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function renderGoogleButton(container, onError) {
+  await loadGoogleIdentity();
+  const rawNonce = crypto.randomUUID() + crypto.randomUUID();
+  const hashedNonce = await sha256Hex(rawNonce);
+  window.google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    nonce: hashedNonce,
+    use_fedcm_for_prompt: true,
+    callback: async ({ credential }) => {
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "google", token: credential, nonce: rawNonce
+      });
+      if (error) return onError(error);
+      window.location.reload();
+    }
+  });
+  container.innerHTML = "";
+  window.google.accounts.id.renderButton(container, {
+    type: "standard", theme: "outline", size: "large", shape: "pill",
+    text: "continue_with", width: Math.min(360, container.clientWidth || 320)
+  });
+}
+
 export async function signInWithEmail(email) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
@@ -145,6 +194,7 @@ export function openAuthDialog() {
       <p style="margin:0 0 18px;color:var(--muted);font-size:14px">
         Ratings are tied to an account so we can keep out spam. Rate as many meals as you like.
       </p>
+      <div id="auth-google-gis" class="gis-slot" hidden></div>
       <button class="primary block" id="auth-google">Continue with Google</button>
       <div style="text-align:center;color:var(--muted);font-size:12px;margin:14px 0">or</div>
       <form id="auth-email-form">
@@ -161,10 +211,18 @@ export function openAuthDialog() {
   const msg = $("#auth-msg", dialog);
   notify(msg, "");
 
-  $("#auth-google", dialog).onclick = async () => {
+  const fallback = $("#auth-google", dialog);
+  fallback.onclick = async () => {
     try { await signInWithGoogle(); }
     catch (e) { notify(msg, e.message || "Google sign-in is not enabled yet.", "error"); }
   };
+  if (GOOGLE_CLIENT_ID) {
+    const slot = $("#auth-google-gis", dialog);
+    slot.hidden = false;
+    fallback.hidden = true;
+    renderGoogleButton(slot, (e) => notify(msg, e.message || "Google sign-in failed.", "error"))
+      .catch(() => { slot.hidden = true; fallback.hidden = false; });
+  }
   $("#auth-email-form", dialog).onsubmit = async (event) => {
     event.preventDefault();
     const button = event.target.querySelector("button");

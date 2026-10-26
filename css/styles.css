@@ -1085,6 +1085,7 @@ dialog.sheet {
   max-width: 100%;
   border-radius: var(--r-xl) var(--r-xl) 0 0;
 }
+.gis-slot { display: flex; justify-content: center; min-height: 44px; }
 dialog.sheet::backdrop { background: rgba(8, 10, 12, .5); backdrop-filter: blur(3px); }
 @media (min-width: 600px) {
   dialog.sheet {

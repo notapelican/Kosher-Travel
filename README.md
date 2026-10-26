@@ -104,10 +104,15 @@ edit someone else's post, or make anyone an admin. Never commit the *service rol
 In Supabase under **Authentication → Providers**:
 
 - **Email** is on by default. The site uses magic links (no passwords to manage).
-- **Google**: enable the provider and paste in a Google OAuth client ID/secret
-  ([Google Cloud Console](https://console.cloud.google.com/apis/credentials) → OAuth client →
-  Web application). Add `https://<project-ref>.supabase.co/auth/v1/callback` as the
-  authorized redirect URI.
+- **Google**: create an OAuth client in the
+  [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (OAuth client ID →
+  Web application) with `https://koshertravel.app` as an **Authorized JavaScript origin** and
+  `https://<project-ref>.supabase.co/auth/v1/callback` as an **Authorized redirect URI**. On the
+  OAuth consent screen give it the app name and logo and publish it. In Supabase enable the
+  Google provider and paste the client ID and secret. Then put the same client ID in
+  `js/config.js` as `GOOGLE_CLIENT_ID`: with it set, the Google button is rendered by Google on
+  the site itself and the consent screen names `koshertravel.app`; without it, the site falls
+  back to a redirect through Supabase, and Google shows the Supabase project address instead.
 
 Then under **Authentication → URL Configuration**, set **Site URL** to `https://koshertravel.app/`
 and add it to **Redirect URLs** too, plus `http://localhost:8000/` if you want to develop locally.
