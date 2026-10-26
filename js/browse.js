@@ -3,7 +3,7 @@ import {
   notify, fillSelect, emptyState, airlineLogo, loadAirlines, lookupFlight, parseFlightNumber,
   currentDesign, photoUrl, reviewHref, formatDate, timeAgo, stars, esc, LOGO, $, $$
 } from "./app.js";
-import { EXPERIENCE_SCORES, DIETS, dietIcon } from "./options.js";
+import { EXPERIENCE_SCORES, DIETS, CABIN_CLASSES, dietIcon } from "./options.js";
 import { airportPicker } from "./airports.js";
 
 const PAGE_SIZE = 18;
@@ -41,7 +41,9 @@ if (!isConfigured) {
 
 function readUrl() {
   renderDietChips();
+  fillSelect($("#f-class"), CABIN_CLASSES, "Any class");
   const p = new URLSearchParams(location.search);
+  if (CABIN_CLASSES.includes(p.get("class"))) $("#f-class").value = p.get("class");
   for (const key of ["from", "to", "flight"]) if (p.get(key)) $(`#f-${key}`).value = p.get(key);
   if (p.get("airline")) $("#f-airline").dataset.pending = p.get("airline");
   if (p.get("hechsher")) $("#f-hechsher").dataset.pending = p.get("hechsher");
@@ -61,6 +63,7 @@ function filters() {
     airline: $("#f-airline").value,
     hechsher: $("#f-hechsher").value,
     diets: $$("#f-diet-chips input:checked").map((box) => box.value),
+    cabin: $("#f-class").value,
     sort
   };
 }
@@ -95,6 +98,7 @@ function applyFilters(query, f) {
   if (f.to) query = query.or(placeClause("destination", f.to));
   if (f.airline) query = query.eq("airline", f.airline);
   if (f.hechsher) query = query.contains("hechshers", [f.hechsher]);   // any meal on the report
+  if (f.cabin) query = query.eq("cabin_class", f.cabin);
   // any of the diets picked, on any meal of the report
   if (f.diets?.length) query = query.overlaps("diets", withImpliedDiets(f.diets));
   if (f.flight) query = query.ilike("flight_number", `%${f.flight.iata}%${f.flight.number}%`);
@@ -339,6 +343,7 @@ function renderCount(f) {
   bits.push(f.flight ? esc(f.flight.display) : "any flight");
   bits.push(f.airline ? esc(f.airline) : `${aggregate(routeRows).length || "all"} airline${aggregate(routeRows).length === 1 ? "" : "s"}`);
   bits.push(f.hechsher ? esc(f.hechsher) : "any hechsher");
+  if (f.cabin) bits.push(esc(f.cabin.toLowerCase()));
   if (f.diets.length) bits.push(esc(f.diets.map((key) => DIETS.find((d) => d.key === key)?.label || key).join(" or ").toLowerCase()));
   countEl.innerHTML = `<b>${total} report${total === 1 ? "" : "s"}</b> ${bits.join(" · ")}`;
   countEl.hidden = false;

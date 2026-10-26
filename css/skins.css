@@ -31,16 +31,15 @@
 .search-strip .code { text-transform: uppercase; font-weight: 700; font-size: 18px; letter-spacing: .04em; }
 .search-strip .go { align-self: end; }
 .search-strip .go button { width: 100%; min-height: 46px; }
-.search-strip .go { grid-column: 1 / -1; }
+/* eight boxes: four rows of two on phones, two rows of four from 760px */
 @media (min-width: 760px) {
-  .search-strip { grid-template-columns: .85fr .85fr .95fr 1.15fr 1.3fr 1.15fr .9fr; }
-  .search-strip .go { grid-column: auto; }
+  .search-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: var(--sp-3); }
 }
 
 /* the diet filter: a select-like button opening the icon chips */
 .diet-field { position: relative; min-width: 0; }
 .search-strip .diet-btn {
-  display: flex; align-items: center; gap: 6px; width: 100%; min-height: 46px;
+  display: flex; align-items: center; justify-content: flex-start; gap: 6px; width: 100%; min-height: 46px;
   padding: 11px 38px 11px 13px; margin: 0;
   font: inherit; font-size: 16px; font-weight: 400; text-align: left; letter-spacing: normal; text-transform: none;
   color: var(--ink); background-color: var(--surface);

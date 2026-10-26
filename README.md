@@ -42,7 +42,7 @@ chosen for good, the others can be deleted from those two files and nothing else
 
 ## Flights and airlines
 
-The home page searches by From, To, flight number, airline, hechsher and diet. Airlines come from the
+The home page searches by From, To, flight number, airline, hechsher, diet and cabin class. Airlines come from the
 `airlines` table (seeded with IATA codes; logos from `logo_url` or a public CDN keyed by code,
 falling back to the code in a tile). Flight numbers are checked against the `flight-lookup`
 Edge Function (setup step 6): a search for a real flight with no reports yet gets a "flown it?
