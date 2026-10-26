@@ -7,7 +7,9 @@
 <meta name="description" content="Traveler ratings and photos of kosher airline meals: airline, flight number, city the meal was loaded in, and hechsher.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230d6b63%22/%3E%3Cpath d=%22M5.49 2.80 L6.47 2.80 L6.47 6.93 L5.49 6.93 Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M6.96 2.80 L7.95 2.80 L7.95 6.93 L6.96 6.93 Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M8.44 2.80 L9.42 2.80 L9.42 6.93 L8.44 6.93 Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M5.49 6.63 L9.42 6.63 L9.42 28.74 L5.49 28.74 Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M7.64 17.81 L19.03 29.20 L21.81 26.42 L10.42 15.03 Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M9.09 18.01 L18.08 13.23 L16.38 10.04 L7.39 14.82 Z%22 fill=%22%23fff%22/%3E%3Cg transform=%22translate(17.14 11.68) rotate(62) scale(0.7860) translate(-16 -16)%22 fill=%22%23fff%22%3E%3Cpath d=%22M16 2.5 L18.099999999999998 7.3 L18.4 10.324000000000002 L25.3 18.694000000000003 L25.3 20.994000000000003 L18.4 15.224000000000002 L18.2 26.2 L13.799999999999999 26.2 L13.6 15.224000000000002 L6.699999999999999 20.994000000000003 L6.699999999999999 18.694000000000003 L13.6 10.324000000000002 L13.9 7.3 Z%22/%3E%3C/g%3E%3C/svg%3E">
 <meta name="theme-color" content="#0d6b63">
+<script>try{var d=JSON.parse(localStorage.getItem("kt-design"));if(d){var h=document.documentElement;h.dataset.skin=d.skin;h.dataset.reports=d.reports;h.dataset.airlines=d.airlines;h.dataset.preset=d.preset;if(d.fonts){var l=document.createElement("link");l.rel="stylesheet";l.href=d.fonts;l.dataset.skinFonts=d.skin;document.head.appendChild(l)}}}catch(e){}</script>
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/skins.css">
 </head>
 <body>
 <header class="site-header" id="site-header"></header>
@@ -22,15 +24,24 @@
       <path d="M16 2.5 L18 7 L18.4 12.5 L29.5 22.5 L29.5 24.8 L18.4 20.2 L18 25.5 L21.5 28.2 L21.5 29.8 L16 28.4 L10.5 29.8 L10.5 28.2 L14 25.5 L13.6 20.2 L2.5 24.8 L2.5 22.5 L13.6 12.5 L14 7 Z" fill="currentColor"/>
     </g>
   </svg>
-  <div class="wrap">
-    <h1>Kosher inflight meals, rated by the people who ate them</h1>
-    <p>Search by airline, flight number, the city the meal was loaded in, or the hechsher on the
-       seal — then see photos of what actually showed up on the tray. Travelers also report how
-       each airline treated them, summarized on the airlines page.</p>
-    <div class="hero-actions">
-      <a class="btn btn-primary" href="submit.html">Rate a meal</a>
-      <a class="btn" href="airlines.html">Compare airlines</a>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <h1>Know how your inflight meal will be <em>before it gets to you.</em></h1>
+      <p>Travelers report the kosher meal they were served: the airline, the city it was loaded in,
+         the seal on the lid, and how the crew handled it.</p>
+      <div class="hero-tick" id="hero-tick" hidden></div>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="submit.html">Rate a meal</a>
+        <a class="btn" href="airlines.html">Compare airlines</a>
+      </div>
     </div>
+    <div class="hero-art window" aria-hidden="true">
+      <div class="pane"><picture>
+        <source srcset="img/sky-night.jpg" media="(prefers-color-scheme: dark)">
+        <img src="img/sky-day.jpg" alt="">
+      </picture></div>
+    </div>
+    <div class="hero-art light" id="hero-light" aria-hidden="true"></div>
   </div>
 </section>
 
@@ -38,42 +49,38 @@
   <div class="wrap">
     <div id="page-notice"></div>
 
-    <div class="stat-row" id="stats" hidden>
-      <div class="stat"><b id="stat-count">–</b><span>ratings</span></div>
-      <div class="stat"><b id="stat-avg">–</b><span>average score</span></div>
-      <div class="stat"><b id="stat-airlines">–</b><span>airlines</span></div>
-    </div>
-
-    <form class="filters" id="filters">
-      <div>
-        <label for="f-q">Search <span class="hint">airline, flight, city, meal, hechsher</span></label>
-        <input type="search" id="f-q" placeholder="e.g. LY 26, Newark, Belz">
-      </div>
-      <div>
-        <label for="f-airline">Airline</label>
-        <select id="f-airline"><option value="">Any</option></select>
-      </div>
-      <div>
-        <label for="f-hechsher">Hechsher</label>
-        <select id="f-hechsher"><option value="">Any</option></select>
-      </div>
-      <div>
-        <label for="f-sort">Sort</label>
-        <select id="f-sort">
-          <option value="new">Newest first</option>
-          <option value="best">Best meal</option>
-          <option value="worst">Worst meal</option>
-          <option value="respect">Best treatment of Jewish passengers</option>
-          <option value="care">Best kosher &amp; observance handling</option>
-        </select>
-      </div>
-      <div><button type="reset">Clear</button></div>
+    <form class="search-strip" id="filters">
+      <div><label for="f-from">From</label><input id="f-from" class="code" placeholder="JFK" autocomplete="off" maxlength="24"></div>
+      <div><label for="f-to">To</label><input id="f-to" class="code" placeholder="TLV" autocomplete="off" maxlength="24"></div>
+      <div><label for="f-flight">Flight</label><input id="f-flight" class="code" placeholder="LY 26" autocomplete="off" maxlength="8"></div>
+      <div><label for="f-airline">Airline</label><select id="f-airline"><option value="">Any airline</option></select></div>
+      <div><label for="f-hechsher">Hechsher</label><select id="f-hechsher"><option value="">Any hechsher</option></select></div>
+      <div class="go"><button type="submit" class="primary">Find meals</button></div>
     </form>
-
+    <div class="sort-chips" id="sort" role="group" aria-label="Sort">
+      <button type="button" data-sort="new" aria-pressed="true">Newest</button>
+      <button type="button" data-sort="best" aria-pressed="false">Best meal</button>
+      <button type="button" data-sort="respect" aria-pressed="false">Best treatment</button>
+      <button type="button" data-sort="care" aria-pressed="false">Kosher handling</button>
+      <button type="button" data-sort="worst" aria-pressed="false">Worst meal</button>
+    </div>
+    <p class="result-count" id="result-count" hidden></p>
     <div class="notice" id="list-msg" hidden></div>
-    <div class="reviews" id="reviews"></div>
-    <div style="text-align:center;margin-top:22px">
-      <button id="load-more" hidden>Load more</button>
+    <div id="miss" hidden></div>
+
+    <div class="tray-table">
+      <section id="route-block" hidden>
+        <h2 class="sec" id="route-heading">Airlines</h2>
+        <div id="route-airlines"></div>
+      </section>
+
+      <section>
+        <h2 class="sec" id="latest-heading">Latest reports</h2>
+        <div class="reviews" id="reviews"></div>
+        <div style="text-align:center;margin-top:22px">
+          <button id="load-more" hidden>Load more</button>
+        </div>
+      </section>
     </div>
   </div>
 </main>

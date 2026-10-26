@@ -1,6 +1,6 @@
 import {
-  supabase, isConfigured, renderHeader, renderSetupWarning,
-  openAuthDialog, notify, fillDatalist, fillSelect, photoUrl, PHOTO_BUCKET, stars, $, $$, esc
+  supabase, isConfigured, renderHeader, renderSetupWarning, openAuthDialog, notify, fillDatalist,
+  fillSelect, photoUrl, PHOTO_BUCKET, stars, loadAirlines, lookupFlight, parseFlightNumber, $, $$, esc
 } from "./app.js";
 import { AIRLINES, HECHSHERIM, MEAL_TYPES, CABIN_CLASSES, EXPERIENCE_SCORES } from "./options.js";
 
@@ -16,6 +16,8 @@ const JPEG_QUALITY = 0.82;
 let attachments = [];
 let editingId = null;
 let profile = null;
+let airlines = [];                 // from the airlines table
+let flight = { id: null, state: "none" };   // state: none | checking | ok | invalid | unknown
 
 $("#experience-fields").innerHTML = EXPERIENCE_SCORES.map(({ key, label, help, scale }) => `
   <div class="field">
@@ -30,6 +32,10 @@ $("#experience-fields").innerHTML = EXPERIENCE_SCORES.map(({ key, label, help, s
 
 fillDatalist("airlines", AIRLINES);
 fillDatalist("hechsherim", HECHSHERIM);
+loadAirlines().then((rows) => {
+  airlines = rows;
+  if (rows.length) fillDatalist("airlines", [...new Set([...rows.map((a) => a.name), ...AIRLINES])].sort((a, b) => a.localeCompare(b)));
+});
 fillSelect($("#cabin_class"), CABIN_CLASSES, "Not sure");
 fillSelect($("#meal_type"), MEAL_TYPES, "Not sure");
 
@@ -59,9 +65,75 @@ async function init() {
   form.hidden = false;
   wireBylineChoice();
   wireAccordions();
+  wireFlightCheck();
 
-  const id = new URLSearchParams(location.search).get("edit");
-  if (id) await loadForEdit(id);
+  const params = new URLSearchParams(location.search);
+  if (params.get("edit")) await loadForEdit(params.get("edit"));
+  else if (params.get("flight")) {
+    $("#flight_number").value = params.get("flight").toUpperCase();
+    await checkFlight();
+  }
+}
+
+/* ------------------------------------------------------------ flight check */
+
+function airlineByName(name) {
+  const n = (name || "").trim().toLowerCase();
+  return airlines.find((a) => a.name.toLowerCase() === n) || null;
+}
+function airlineByIata(iata) {
+  return airlines.find((a) => a.iata === iata) || null;
+}
+
+/**
+ * Validates the flight number against the flight-lookup function as soon as
+ * the field is left, fills in what it can (airline, route), and blocks posting
+ * to a flight that does not exist. If the function is not deployed the check
+ * is skipped and the form behaves as before.
+ */
+function wireFlightCheck() {
+  const field = $("#flight_number");
+  let timer;
+  field.addEventListener("input", () => { flight = { id: null, state: "none" }; setFlightStatus(""); clearTimeout(timer); timer = setTimeout(checkFlight, 700); });
+  field.addEventListener("blur", () => { clearTimeout(timer); checkFlight(); });
+  $("#airline").addEventListener("change", () => { if (parseFlightNumber(field.value)) checkFlight(); });
+}
+
+function setFlightStatus(text, kind = "") {
+  const el = $("#flight-status");
+  el.textContent = text;
+  el.style.color = kind === "error" ? "var(--danger)" : kind === "ok" ? "var(--good)" : "";
+}
+
+async function checkFlight() {
+  const raw = $("#flight_number").value.trim();
+  const parsed = parseFlightNumber(raw);
+  if (!raw) { flight = { id: null, state: "none" }; setFlightStatus(""); return; }
+  if (!parsed) { flight = { id: null, state: "invalid" }; setFlightStatus("Flight numbers look like LY 26: a two-character airline code and up to four digits.", "error"); return; }
+  $("#flight_number").value = parsed.display;
+  // the airline code in the number names the airline
+  const byCode = airlineByIata(parsed.iata);
+  if (byCode && !$("#airline").value.trim()) $("#airline").value = byCode.name;
+
+  flight = { id: null, state: "checking" };
+  setFlightStatus("Checking the flight…");
+  const result = await lookupFlight(parsed.display);
+  if (parseFlightNumber($("#flight_number").value)?.display !== parsed.display) return;   // field changed meanwhile
+  if (result.found) {
+    const f = result.flight;
+    flight = { id: f.id, state: "ok", data: f };
+    const route = [f.origin_iata, f.destination_iata].filter(Boolean).join(" → ");
+    setFlightStatus(["Found", route, f.aircraft, f.codeshare ? "codeshare" : ""].filter(Boolean).join(" · "), "ok");
+    if (!$("#origin_city").value.trim() && f.origin_iata) $("#origin_city").placeholder = `${f.origin_iata}, or the city it was actually loaded in`;
+    if (!$("#destination_city").value.trim() && f.destination_iata) $("#destination_city").value = f.destination_iata;
+  } else if (result.unavailable) {
+    flight = { id: null, state: "unknown" };
+    setFlightStatus("Could not verify this flight right now; you can still post.");
+  } else {
+    flight = { id: null, state: "invalid" };
+    setFlightStatus(result.reason || `${parsed.display} does not seem to be a current flight. Check the number.`, "error");
+  }
+  form.dispatchEvent(new Event("input"));
 }
 
 /**
@@ -164,6 +236,7 @@ async function loadForEdit(id) {
     if (field) field.value = data[key] ?? "";
   }
   $("#rating").value = String(data.rating);
+  if (data.flight_id) { flight = { id: data.flight_id, state: "ok" }; setFlightStatus("Flight on record", "ok"); }
   $("#post_as").value = data.is_anonymous ? "anon" : "name";
   $("#post_as").dispatchEvent(new Event("change"));
   attachments = (data.photos || []).map((path) => ({ path, url: photoUrl(path) }));
@@ -291,10 +364,23 @@ form.addEventListener("submit", async (event) => {
   const value = (id) => document.getElementById(id).value.trim();
   const orNull = (id) => value(id) || null;
 
+  if (value("flight_number") && (flight.state === "invalid" || flight.state === "checking")) {
+    if (flight.state === "checking") await checkFlight();
+    if (flight.state === "invalid") {
+      notify(msg, "That flight number did not check out. Fix it, or leave the field empty if you are not sure.", "error");
+      $("#flight_number").focus();
+      button.disabled = false;
+      return;
+    }
+  }
+
   try {
     const photos = await uploadPending();
+    const airlineRow = airlineByName(value("airline")) || (parseFlightNumber(value("flight_number")) && airlineByIata(parseFlightNumber(value("flight_number")).iata));
     const payload = {
       airline: value("airline"),
+      airline_iata: airlineRow?.iata || null,
+      flight_id: flight.state === "ok" ? flight.id : null,
       flight_number: orNull("flight_number"),
       origin_city: value("origin_city"),
       destination_city: orNull("destination_city"),

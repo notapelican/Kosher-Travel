@@ -1,5 +1,5 @@
 import {
-  supabase, isConfigured, renderHeader, renderSetupWarning, notify, stars, esc, $
+  supabase, isConfigured, renderHeader, renderSetupWarning, notify, stars, esc, airlineLogo, loadAirlines, $
 } from "./app.js";
 import { EXPERIENCE_SCORES } from "./options.js";
 
@@ -21,7 +21,7 @@ $("#airline-head").innerHTML =
 
 $("#sort-by").innerHTML = COLUMNS
   .map((c) => `<option value="${c.key}">${esc(c.label)} score</option>`)
-  .join("") + `<option value="count">Number of ratings</option>`;
+  .join("") + `<option value="count">Number of ratings</option><option value="name">Name</option>`;
 
 if (!isConfigured) {
   renderSetupWarning();
@@ -31,19 +31,25 @@ if (!isConfigured) {
 }
 
 async function load() {
-  const { data, error } = await supabase
-    .from("reviews_public")
-    .select(`airline, rating, ${EXPERIENCE_SCORES.map((s) => s.key).join(", ")}`)
-    .limit(5000);
-
+  const [known, { data, error }] = await Promise.all([
+    loadAirlines(),
+    supabase.from("reviews_public")
+      .select(`airline, airline_iata, rating, ${EXPERIENCE_SCORES.map((s) => s.key).join(", ")}`)
+      .limit(5000)
+  ]);
   if (error) return notify(msg, `Could not load airlines: ${error.message}`, "error");
 
-  const grouped = new Map();
-  for (const row of data) {
+  // Start from every airline in the table, then add any name a review used that is not there.
+  const byKey = new Map(known.map((a) => [a.iata, { iata: a.iata, name: a.name, logo: a.logo_url, count: 0, totals: {}, counts: {} }]));
+  const byName = new Map([...byKey.values()].map((e) => [e.name.toLowerCase(), e]));
+  for (const row of data || []) {
     const name = (row.airline || "").trim();
-    if (!name) continue;
-    if (!grouped.has(name)) grouped.set(name, { airline: name, count: 0, totals: {}, counts: {} });
-    const entry = grouped.get(name);
+    let entry = (row.airline_iata && byKey.get(row.airline_iata)) || byName.get(name.toLowerCase());
+    if (!entry) {
+      if (!name) continue;
+      entry = { iata: null, name, logo: null, count: 0, totals: {}, counts: {} };
+      byName.set(name.toLowerCase(), entry);
+    }
     entry.count += 1;
     for (const { key } of COLUMNS) {
       if (row[key] == null) continue;
@@ -52,9 +58,8 @@ async function load() {
     }
   }
 
-  airlines = [...grouped.values()].map((entry) => ({
-    airline: entry.airline,
-    count: entry.count,
+  airlines = [...new Set([...byKey.values(), ...byName.values()])].map((entry) => ({
+    iata: entry.iata, name: entry.name, logo: entry.logo, count: entry.count,
     averages: Object.fromEntries(COLUMNS.map(({ key }) => [
       key,
       entry.counts[key] ? { avg: entry.totals[key] / entry.counts[key], n: entry.counts[key] } : null
@@ -71,17 +76,19 @@ function draw() {
   const rows = airlines
     .filter((a) => a.count >= min)
     .sort((a, b) => {
-      if (sortKey === "count") return b.count - a.count;
-      // Airlines with no score for the chosen column sink to the bottom.
+      if (sortKey === "name") return a.name.localeCompare(b.name);
+      if (sortKey === "count") return b.count - a.count || a.name.localeCompare(b.name);
+      // Airlines with no score for the chosen column sink to the bottom, alphabetically.
       const av = a.averages[sortKey]?.avg ?? -1;
       const bv = b.averages[sortKey]?.avg ?? -1;
-      return bv - av || b.count - a.count || a.airline.localeCompare(b.airline);
+      return bv - av || b.count - a.count || a.name.localeCompare(b.name);
     });
 
   body.innerHTML = rows.length
-    ? rows.map((a) => `<tr>
-        <td data-label=""><a href="index.html?q=${encodeURIComponent(a.airline)}">${esc(a.airline)}</a></td>
-        <td data-label="Ratings">${a.count}</td>
+    ? rows.map((a) => `<tr class="${a.count ? "" : "unrated"}">
+        <td data-label="" class="airline-cell">
+          <a href="index.html?airline=${encodeURIComponent(a.name)}">${airlineLogo(a.iata, a.name, a.logo)}<span>${esc(a.name)}${a.iata ? `<small>${esc(a.iata)}</small>` : ""}</span></a></td>
+        <td data-label="Ratings">${a.count || `<span class="no-data">No reports yet</span>`}</td>
         ${COLUMNS.map(({ key, short }) => {
           const score = a.averages[key];
           return `<td class="score-cell" data-label="${esc(short)}">${score
@@ -89,8 +96,7 @@ function draw() {
             : `<span class="no-data">—</span>`}</td>`;
         }).join("")}
       </tr>`).join("")
-    : `<tr><td colspan="${COLUMNS.length + 2}" class="empty">
-         No airlines with that many ratings yet.</td></tr>`;
+    : `<tr><td colspan="${COLUMNS.length + 2}" class="empty">No airlines with that many ratings yet.</td></tr>`;
 }
 
 $("#airline-controls").addEventListener("input", draw);

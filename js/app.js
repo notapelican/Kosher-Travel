@@ -1,6 +1,8 @@
 import { createClient } from "./vendor/supabase.js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY, SITE_NAME, GOOGLE_CLIENT_ID } from "./config.js";
 import { EXPERIENCE_SCORES } from "./options.js";
+import { applyDesign, cachedDesign, currentDesign, PRESETS } from "./design.js";
+export { applyDesign, currentDesign, PRESETS };
 
 export const isConfigured =
   !SUPABASE_URL.includes("YOUR-PROJECT-REF") && !SUPABASE_ANON_KEY.startsWith("YOUR-");
@@ -10,6 +12,23 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 export const PHOTO_BUCKET = "meal-photos";
+
+/* ----------------------------------------------------------------- design */
+// First paint uses the cached choice (also applied by the inline script in
+// each page's <head>); the live setting is fetched and applied right after.
+applyDesign(cachedDesign());
+export const designReady = isConfigured
+  ? supabase.from("site_settings").select("value").eq("key", "design").maybeSingle()
+      .then(({ data }) => applyDesign(data?.value || cachedDesign()))
+      .catch(() => currentDesign())
+  : Promise.resolve(currentDesign());
+
+export async function saveDesign(value) {
+  const { error } = await supabase.from("site_settings")
+    .upsert({ key: "design", value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  if (error) throw error;
+  return applyDesign(value);
+}
 
 /**
  * The logo: a K whose stem is a fork (three tines at the top) and whose upper
@@ -59,6 +78,78 @@ export function formatDate(value, opts = { dateStyle: "medium" }) {
   if (!value) return "";
   const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00` : value);
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, opts);
+}
+
+export function timeAgo(value) {
+  const t = new Date(value).getTime();
+  if (Number.isNaN(t)) return "";
+  const s = Math.max(0, (Date.now() - t) / 1000);
+  if (s < 90) return "just now";
+  const m = s / 60, h = m / 60, d = h / 24;
+  if (h < 1) return `${Math.round(m)} min ago`;
+  if (d < 1) return `${Math.round(h)}h ago`;
+  if (d < 14) return `${Math.round(d)}d ago`;
+  if (d < 60) return `${Math.round(d / 7)}w ago`;
+  if (d < 365) return `${Math.round(d / 30)}mo ago`;
+  return `${Math.round(d / 365)}y ago`;
+}
+
+/* --------------------------------------------------------------- airlines */
+
+let airlinesCache;
+/** Every airline the site knows, from the airlines table, cached per page. */
+export async function loadAirlines() {
+  if (airlinesCache) return airlinesCache;
+  if (!isConfigured) return (airlinesCache = []);
+  const { data } = await supabase.from("airlines").select("iata, icao, name, logo_url, active").order("name");
+  return (airlinesCache = (data || []).filter((a) => a.active !== false));
+}
+
+/** Where a logo comes from when the airlines table has none: a public CDN keyed by IATA code. */
+export function airlineLogoUrl(iata, logoUrl) {
+  if (logoUrl) return logoUrl;
+  return iata ? `https://images.kiwi.com/airlines/64/${encodeURIComponent(iata)}.png` : "";
+}
+
+/** Logo tile that falls back to the airline code if the image does not load. */
+export function airlineLogo(iata, name = "", logoUrl = "", { large = false } = {}) {
+  const url = airlineLogoUrl(iata, logoUrl);
+  const code = esc(iata || (name || "?").slice(0, 2).toUpperCase());
+  return `<span class="al-logo${large ? " lg" : ""}${url ? "" : " no-img"}" title="${esc(name)}">
+    ${url ? `<img src="${esc(url)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('no-img')">` : ""}
+    <span class="code">${code}</span></span>`;
+}
+
+/* ----------------------------------------------------------------- flights */
+
+/** "LY 26", "ly026", "LY-26" -> { iata, number, display } or null. */
+export function parseFlightNumber(raw) {
+  const m = String(raw ?? "").trim().toUpperCase().match(/^([A-Z0-9]{2})[\s-]*0*(\d{1,4})$/);
+  return m ? { iata: m[1], number: m[2], display: `${m[1]} ${m[2]}` } : null;
+}
+
+const flightMemo = new Map();
+/**
+ * Asks the flight-lookup Edge Function whether a flight exists.
+ * Resolves to { found, flight } / { found:false, reason } / { unavailable:true }
+ * when the function is not deployed, so callers can degrade gracefully.
+ */
+export async function lookupFlight(raw) {
+  const parsed = parseFlightNumber(raw);
+  if (!parsed) return { found: false, reason: "That does not look like a flight number (e.g. LY 26)." };
+  const key = parsed.iata + parsed.number;
+  if (flightMemo.has(key)) return flightMemo.get(key);
+  const promise = (async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("flight-lookup", { body: { flight: parsed.display } });
+      if (error || !data || data.error) return { unavailable: true, reason: data?.error || error?.message };
+      return data;
+    } catch (e) {
+      return { unavailable: true, reason: e.message };
+    }
+  })();
+  flightMemo.set(key, promise);
+  return promise;
 }
 
 export function photoUrl(path) {
@@ -332,12 +423,13 @@ export function emptyState(title, body = "") {
 /* ---------------------------------------------------- review card + photos */
 
 export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
-  const route = [review.origin_city, review.destination_city].filter(Boolean).join(" → ");
+  const route = [review.origin_city || review.origin_iata, review.destination_city || review.destination_iata].filter(Boolean).join(" → ");
   const tags = [
     review.hechsher ? `<span class="tag hechsher">${esc(review.hechsher)}</span>` : "",
     review.meal_type ? `<span class="tag">${esc(review.meal_type)}</span>` : "",
     review.cabin_class ? `<span class="tag">${esc(review.cabin_class)}</span>` : "",
-    review.flight_date ? `<span class="tag">Flown ${esc(formatDate(review.flight_date))}</span>` : ""
+    review.flight_date ? `<span class="tag">Flown ${esc(formatDate(review.flight_date))}</span>` : "",
+    review.aircraft ? `<span class="tag">${esc(review.aircraft)}</span>` : ""
   ].join("");
 
   const photos = (review.photos || [])
@@ -364,12 +456,17 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
 
   const title = [review.airline, review.flight_number].filter(Boolean).join(" ");
   const byline = review.is_anonymous ? "Anonymous" : (review.author_name || "Traveler");
+  const logo = review.airline_iata || review.airline
+    ? airlineLogo(review.airline_iata, review.airline, review.airline_logo_url) : "";
+  const operated = review.codeshare && review.operating_iata && review.operating_iata !== review.airline_iata
+    ? `<div class="operated">Operated by ${esc(review.operating_iata)}</div>` : "";
 
   return `
     <article class="review" data-id="${esc(review.id)}">
       <div class="review-top">
         <div>
-          <h3>${esc(title || "Unknown flight")}</h3>
+          <div class="review-head">${logo}<h3>${esc(title || "Unknown flight")}</h3></div>
+          ${operated}
           <div class="route">${esc(route)}${
             review.meal_name ? `<span class="sep">·</span>${esc(review.meal_name)}` : ""}</div>
         </div>

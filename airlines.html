@@ -7,17 +7,19 @@
 <meta name="description" content="Airline-by-airline averages for kosher meal quality, treatment of Jewish passengers, and kosher and observance handling.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230d6b63%22/%3E%3Cpath d=%22M5.49 2.80 L6.47 2.80 L6.47 6.93 L5.49 6.93 Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M6.96 2.80 L7.95 2.80 L7.95 6.93 L6.96 6.93 Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M8.44 2.80 L9.42 2.80 L9.42 6.93 L8.44 6.93 Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M5.49 6.63 L9.42 6.63 L9.42 28.74 L5.49 28.74 Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M7.64 17.81 L19.03 29.20 L21.81 26.42 L10.42 15.03 Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M9.09 18.01 L18.08 13.23 L16.38 10.04 L7.39 14.82 Z%22 fill=%22%23fff%22/%3E%3Cg transform=%22translate(17.14 11.68) rotate(62) scale(0.7860) translate(-16 -16)%22 fill=%22%23fff%22%3E%3Cpath d=%22M16 2.5 L18.099999999999998 7.3 L18.4 10.324000000000002 L25.3 18.694000000000003 L25.3 20.994000000000003 L18.4 15.224000000000002 L18.2 26.2 L13.799999999999999 26.2 L13.6 15.224000000000002 L6.699999999999999 20.994000000000003 L6.699999999999999 18.694000000000003 L13.6 10.324000000000002 L13.9 7.3 Z%22/%3E%3C/g%3E%3C/svg%3E">
 <meta name="theme-color" content="#0d6b63">
+<script>try{var d=JSON.parse(localStorage.getItem("kt-design"));if(d){var h=document.documentElement;h.dataset.skin=d.skin;h.dataset.reports=d.reports;h.dataset.airlines=d.airlines;h.dataset.preset=d.preset;if(d.fonts){var l=document.createElement("link");l.rel="stylesheet";l.href=d.fonts;l.dataset.skinFonts=d.skin;document.head.appendChild(l)}}}catch(e){}</script>
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/skins.css">
 </head>
 <body>
 <header class="site-header" id="site-header"></header>
 <main>
   <div class="wrap">
     <div class="page-head">
-      <h1>Airlines at a glance</h1>
-      <p>Averages across every rating on the site. The two right-hand columns are optional on the
-         rating form, so they usually rest on fewer reports than the meal score — a single number
-         is one person's experience, not a verdict.</p>
+      <h1>Airlines</h1>
+      <p>Every airline the site knows, with the average of every rating travelers have posted. The
+         two right-hand scores are optional on the rating form, so they rest on fewer reports than
+         the meal score; one report is one person's experience.</p>
     </div>
 
     <div id="page-notice"></div>
@@ -29,17 +31,18 @@
         <select id="sort-by"></select>
       </div>
       <div>
-        <label for="min-reports">Minimum reports</label>
+        <label for="min-reports">Show</label>
         <select id="min-reports">
-          <option value="1">1+</option>
-          <option value="3">3+</option>
-          <option value="5">5+</option>
+          <option value="0">All airlines</option>
+          <option value="1">With reports</option>
+          <option value="3">3+ reports</option>
+          <option value="5">5+ reports</option>
         </select>
       </div>
     </form>
 
     <div class="card table-scroll">
-      <table class="admin" id="airline-table">
+      <table class="admin airlines" id="airline-table">
         <thead><tr id="airline-head"></tr></thead>
         <tbody id="airline-body"></tbody>
       </table>

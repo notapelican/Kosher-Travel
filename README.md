@@ -11,11 +11,13 @@ and nothing to install.
 
 ```
 index.html      browse + search all ratings
-airlines.html   per-airline averages: meal, respect, kosher handling
+airlines.html   every airline, with logo and averages: meal, respect, kosher handling
 submit.html     post a rating (also used to edit one, ?edit=<id>)
 mine.html       your own ratings + display name
 admin.html      admin dashboard: hide/edit/delete ratings, ban/promote users
 css/styles.css  all styling (light + dark)
+css/skins.css   the switchable designs (see "Designs" below)
+js/design.js    the design presets and how a choice is applied
 js/config.js    <- the only file you have to edit
 js/app.js       Supabase client, auth, shared rendering
 js/browse.js  js/airlines.js  js/submit.js  js/mine.js  js/admin.js
@@ -23,6 +25,28 @@ js/options.js   airline / hechsher / meal lists, and the experience-score wordin
 supabase/schema.sql       tables, row-level security, storage bucket
 supabase/migrations/      changes to apply to an already-deployed database
 ```
+
+## Designs
+
+The admin page has a **Design** tab that switches the whole site between five looks: the
+original teal design and the four redesigns under `design-review/`. A design is three
+settings stored together in `site_settings` (key `design`): a **skin** (colors, type, radii and
+the hero), a **reports** layout (how review cards lay out) and an **airlines** renderer (how the
+"airlines on this route" block is drawn). The presets are defined in
+[`js/design.js`](js/design.js); the CSS for each skin is in [`css/skins.css`](css/skins.css),
+selected by `data-skin` on `<html>`. The choice is cached in `localStorage` so a returning
+visitor's first paint already uses it, then refreshed from the database. Once a design is
+chosen for good, the others can be deleted from those two files and nothing else changes.
+
+## Flights and airlines
+
+The home page searches by From, To, flight number, airline and hechsher. Airlines come from the
+`airlines` table (seeded with IATA codes; logos from `logo_url` or a public CDN keyed by code,
+falling back to the code in a tile). Flight numbers are checked against the `flight-lookup`
+Edge Function (setup step 6): a search for a real flight with no reports yet gets a "flown it?
+add yours" prompt, a search for a flight that does not exist says so, and the rating form will
+not post to a flight the lookup rejects. Validated flights carry their route, operating carrier
+and aircraft onto each report.
 
 ## What a rating records
 

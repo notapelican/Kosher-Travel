@@ -1,6 +1,6 @@
 import {
-  supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard,
-  enablePhotoLightbox, notify, formatDate, esc, PHOTO_BUCKET, $
+  supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard, enablePhotoLightbox,
+  notify, formatDate, esc, PHOTO_BUCKET, PRESETS, currentDesign, designReady, saveDesign, $
 } from "./app.js";
 
 const msg = $("#admin-msg");
@@ -22,13 +22,14 @@ async function init() {
 
   $("#admin-body").hidden = false;
   wireTabs();
+  designReady.then(renderDesignOptions);
   // users first, so anonymous reviews can be attributed on the ratings tab
   await loadUsers();
   await loadReviews();
 }
 
 function wireTabs() {
-  const tabs = [["#tab-reviews", "#panel-reviews"], ["#tab-users", "#panel-users"]];
+  const tabs = [["#tab-reviews", "#panel-reviews"], ["#tab-users", "#panel-users"], ["#tab-design", "#panel-design"]];
   for (const [tabSel, panelSel] of tabs) {
     $(tabSel).addEventListener("click", () => {
       for (const [t, p] of tabs) {
@@ -39,6 +40,35 @@ function wireTabs() {
     });
   }
 }
+
+/* ---------------------------------------------------------------------- design */
+
+const THUMBS = { board: "a", night: "b", cabin: "c", window: "d" };
+
+function renderDesignOptions() {
+  const active = currentDesign().preset;
+  $("#design-options").innerHTML = Object.entries(PRESETS).map(([id, p]) => `
+    <label class="design-option${id === active ? " is-active" : ""}">
+      <input type="radio" name="design" value="${id}" ${id === active ? "checked" : ""}>
+      <span class="design-thumb">${THUMBS[id]
+        ? `<img src="design-review/shots/${THUMBS[id]}-desk.jpg" alt="" loading="lazy">`
+        : `<span class="design-swatch"></span>`}</span>
+      <span class="design-text"><b>${esc(p.label)}</b><span class="hint">${esc(p.blurb)}</span></span>
+      ${id === active ? `<span class="tag">Live</span>` : ""}
+    </label>`).join("");
+}
+
+$("#design-options").addEventListener("change", async (event) => {
+  const id = event.target.value;
+  if (!PRESETS[id]) return;
+  try {
+    await saveDesign({ preset: id, ...PRESETS[id] });
+    notify(msg, `Design set to “${PRESETS[id].label}”. Visitors see it on their next page load.`, "ok");
+    renderDesignOptions();
+  } catch (e) {
+    notify(msg, e.message, "error");
+  }
+});
 
 /* --------------------------------------------------------------------- ratings */
 
