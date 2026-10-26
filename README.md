@@ -20,7 +20,7 @@ css/skins.css   the switchable designs (see "Designs" below)
 js/design.js    the design presets and how a choice is applied
 js/config.js    <- the only file you have to edit
 js/app.js       Supabase client, auth, shared rendering
-js/browse.js  js/airlines.js  js/submit.js  js/mine.js  js/admin.js
+js/browse.js  js/airlines.js  js/submit.js  js/mine.js  js/admin.js  js/review.js
 js/options.js   airline / hechsher / meal lists, and the experience-score wording
 js/airports.js  airport autocomplete
 data/airports.json   the airports the site accepts (built by tools/build_airports.py)
@@ -104,6 +104,12 @@ friendly. The form shows them as tappable chips with an icon each; reports show 
 picked, with the same icons. The list, labels and icons are `DIETS` in
 [`js/options.js`](js/options.js); the database accepts only those keys
 (`review_meals_diets_check`), so a new diet goes in both places.
+
+**Each report has its own page**, `review.html?id=…`. Clicking anywhere on a card, in any list
+and any design, opens it (Ctrl/Cmd-click opens a new tab; Edit and Delete buttons keep their
+own behavior). The page shows every meal with its own photos, which open full size there, and
+links to more reports on the same flight, airline and route. Hidden reports open only for
+their author and admins.
 
 **Caterers and hechsherim** are suggested as you type but never restricted, since new ones
 turn up. Caterer suggestions include every caterer already named on the site, so spellings

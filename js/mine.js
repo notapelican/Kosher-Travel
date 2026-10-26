@@ -1,13 +1,13 @@
 import {
   supabase, isConfigured, renderHeader, renderSetupWarning,
-  openAuthDialog, reviewCard, enablePhotoLightbox, notify, emptyState, PHOTO_BUCKET, reportPhotoPaths, $
+  openAuthDialog, reviewCard, enableReviewLinks, notify, emptyState, PHOTO_BUCKET, reportPhotoPaths, $
 } from "./app.js";
 
 const list = $("#reviews");
 const msg = $("#list-msg");
 let profile = null;
 
-enablePhotoLightbox(list);
+enableReviewLinks(list);
 init();
 
 async function init() {

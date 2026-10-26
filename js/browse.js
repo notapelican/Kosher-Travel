@@ -1,7 +1,7 @@
 import {
-  supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard, enablePhotoLightbox,
+  supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard, enableReviewLinks,
   notify, fillSelect, emptyState, airlineLogo, loadAirlines, lookupFlight, parseFlightNumber,
-  currentDesign, photoUrl, formatDate, timeAgo, stars, esc, LOGO, $, $$
+  currentDesign, photoUrl, reviewHref, formatDate, timeAgo, stars, esc, LOGO, $, $$
 } from "./app.js";
 import { EXPERIENCE_SCORES } from "./options.js";
 import { airportPicker } from "./airports.js";
@@ -23,7 +23,7 @@ let routeRows = [];      // reviews for the route block, aggregated per airline 
 let firstPage = [];      // the latest page, for the night skin's featured panel
 
 renderHeader("index.html");
-enablePhotoLightbox(list);
+enableReviewLinks(list);
 readUrl();
 // suggest airports, but any text still searches (a city name matches all its airports)
 for (const id of ["#f-from", "#f-to"]) airportPicker($(id), { fill: "code" });
@@ -153,10 +153,12 @@ function renderFeatured() {
     return;
   }
   const route = [pick.origin_iata || pick.origin_city, pick.destination_iata || pick.destination_city].filter(Boolean).join(" → ");
-  box.innerHTML = `<img src="${esc(photoUrl(pick.photos[0]))}" alt="">
-    <div class="cap"><div class="sc">${esc(pick.rating)}</div>
+  // the same report is in the list below, so this mouse-only link stays out of the tab order
+  box.innerHTML = `<a class="feature" href="${esc(reviewHref(pick))}" tabindex="-1">
+    <img src="${esc(photoUrl(pick.photos[0]))}" alt="">
+    <div class="cap"><div class="sc">${esc(Number(pick.rating).toFixed(Number.isInteger(Number(pick.rating)) ? 0 : 1))}</div>
       <b>${esc([pick.airline, pick.flight_number].filter(Boolean).join(" "))}${route ? ` · ${esc(route)}` : ""}</b>
-      <span>${esc([pick.hechsher, pick.origin_city ? `loaded ${pick.origin_city}` : "", pick.meal_name, formatDate(pick.created_at)].filter(Boolean).join(" · "))}</span></div>`;
+      <span>${esc([pick.hechsher, pick.origin_city ? `loaded ${pick.origin_city}` : "", pick.meal_name, formatDate(pick.created_at)].filter(Boolean).join(" · "))}</span></div></a>`;
 }
 
 /* --------------------------------------------------------- route airlines */

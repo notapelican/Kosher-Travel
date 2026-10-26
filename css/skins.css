@@ -125,32 +125,32 @@ h2.sec small { font-weight: 500; color: var(--muted); margin-left: 8px; }
 .review .photos { order: 0; }
 
 html[data-reports="grid"] .reviews { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-html[data-reports="grid"] .review { display: flex; flex-direction: column; gap: var(--sp-2); }
-html[data-reports="grid"] .review .photos { order: -1; margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) 4px; display: grid; grid-template-columns: 1fr; }
-html[data-reports="grid"] .review .photos img { width: 100%; height: 170px; aspect-ratio: auto; border-radius: var(--r-lg) var(--r-lg) 0 0; }
-html[data-reports="grid"] .review .photos img:not(:first-child) { display: none; }
-@media (min-width: 600px) { html[data-reports="grid"] .review .photos { margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-5)) 4px; } }
+html[data-reports="grid"] .reviews .review { display: flex; flex-direction: column; gap: var(--sp-2); }
+html[data-reports="grid"] .reviews .review .photos { order: -1; margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) 4px; display: grid; grid-template-columns: 1fr; }
+html[data-reports="grid"] .reviews .review .photos img { width: 100%; height: 170px; aspect-ratio: auto; border-radius: var(--r-lg) var(--r-lg) 0 0; }
+html[data-reports="grid"] .reviews .review .photos img:not(:first-child) { display: none; }
+@media (min-width: 600px) { html[data-reports="grid"] .reviews .review .photos { margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-5)) 4px; } }
 
 html[data-reports="strip"] .reviews { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
-html[data-reports="strip"] .review { border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; gap: var(--sp-2); }
-html[data-reports="strip"] .review .photos { order: -1; margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) 4px; display: grid; grid-template-columns: 1fr; }
-html[data-reports="strip"] .review .photos img { width: 100%; height: 150px; aspect-ratio: auto; border-radius: 0; }
-html[data-reports="strip"] .review .photos img:not(:first-child) { display: none; }
-@media (min-width: 600px) { html[data-reports="strip"] .review .photos { margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-5)) 4px; } }
+html[data-reports="strip"] .reviews .review { border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; gap: var(--sp-2); }
+html[data-reports="strip"] .reviews .review .photos { order: -1; margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) 4px; display: grid; grid-template-columns: 1fr; }
+html[data-reports="strip"] .reviews .review .photos img { width: 100%; height: 150px; aspect-ratio: auto; border-radius: 0; }
+html[data-reports="strip"] .reviews .review .photos img:not(:first-child) { display: none; }
+@media (min-width: 600px) { html[data-reports="strip"] .reviews .review .photos { margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-5)) 4px; } }
 
 /* cards in columns are phone-narrow at any width: keep the score label on its own line */
-html[data-reports="grid"] .subscore, html[data-reports="strip"] .subscore { grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--sp-3); }
-html[data-reports="grid"] .subscore .meter, html[data-reports="strip"] .subscore .meter { grid-column: 1 / -1; }
-html[data-reports="grid"] .subscore .val, html[data-reports="strip"] .subscore .val { grid-row: 1; grid-column: 2; }
+html[data-reports="grid"] .reviews .subscore, html[data-reports="strip"] .reviews .subscore { grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--sp-3); }
+html[data-reports="grid"] .reviews .subscore .meter, html[data-reports="strip"] .reviews .subscore .meter { grid-column: 1 / -1; }
+html[data-reports="grid"] .reviews .subscore .val, html[data-reports="strip"] .reviews .subscore .val { grid-row: 1; grid-column: 2; }
 
 html[data-reports="list"] .reviews { gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
-html[data-reports="list"] .review { border: 0; border-radius: 0; box-shadow: none; }
+html[data-reports="list"] .reviews .review { border: 0; border-radius: 0; box-shadow: none; }
 @media (min-width: 640px) {
-  html[data-reports="list"] .review { display: grid; grid-template-columns: 120px minmax(0, 1fr); column-gap: var(--sp-4); }
-  html[data-reports="list"] .review > * { grid-column: 2; }
-  html[data-reports="list"] .review .photos { grid-column: 1; grid-row: 1 / span 6; align-self: start; display: grid; grid-template-columns: 1fr; margin-top: 0; }
-  html[data-reports="list"] .review .photos img { width: 120px; height: 90px; aspect-ratio: auto; }
-  html[data-reports="list"] .review .photos img:not(:first-child) { display: none; }
+  html[data-reports="list"] .reviews .review { display: grid; grid-template-columns: 120px minmax(0, 1fr); column-gap: var(--sp-4); }
+  html[data-reports="list"] .reviews .review > * { grid-column: 2; }
+  html[data-reports="list"] .reviews .review .photos { grid-column: 1; grid-row: 1 / span 6; align-self: start; display: grid; grid-template-columns: 1fr; margin-top: 0; }
+  html[data-reports="list"] .reviews .review .photos img { width: 120px; height: 90px; aspect-ratio: auto; }
+  html[data-reports="list"] .reviews .review .photos img:not(:first-child) { display: none; }
 }
 
 /* ==========================================================================
@@ -225,6 +225,7 @@ html[data-skin="night"] .hero h1 em { font-weight: 600; }
 html[data-skin="night"] .hero-actions, html[data-skin="night"] .hero-deco { display: none; }
 html[data-skin="night"] .hero-art.light { display: block; position: relative; border-radius: 14px; overflow: hidden; background: var(--surface); }
 html[data-skin="night"] .hero-art.light::before { content: ""; position: absolute; inset: -40% -20% auto -20%; height: 120%; background: radial-gradient(ellipse at 50% 0%, var(--glow), transparent 60%); pointer-events: none; z-index: 1; }
+html[data-skin="night"] .hero-art.light .feature { display: block; color: inherit; text-decoration: none; }
 html[data-skin="night"] .hero-art.light img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
 html[data-skin="night"] .hero-art.light .cap { position: relative; padding: 12px 14px 14px; display: grid; gap: 3px; }
 html[data-skin="night"] .hero-art.light .cap b { font-family: var(--font-display); font-weight: 600; font-size: 17px; }

@@ -443,7 +443,16 @@ export function reportPhotoPaths(row) {
   return [...new Set([...(row?.photos || []), ...(row?.review_meals || []).flatMap((m) => m.photos || [])])];
 }
 
-export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
+export function reviewHref(review) {
+  return `review.html?id=${encodeURIComponent(review.id)}`;
+}
+
+/**
+ * A report card. In a list (the default) the whole card opens the report's
+ * own page; with full (on that page) it links nowhere and each meal of a
+ * several-meal report shows its own photos.
+ */
+export function reviewCard(review, { actions = "", bylineNote = "", full = false } = {}) {
   const meals = reportMeals(review);
   const several = meals.length > 1;
   const only = meals[0] || {};
@@ -470,10 +479,11 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
   ].join("");
 
   const photoPaths = meals.length ? meals.flatMap((m) => m.photos || []) : (review.photos || []);
-  const photos = photoPaths
+  const photoTags = (paths) => paths
     .map((p) => `<img src="${esc(photoUrl(p))}" alt="Photo of the meal" loading="lazy"
                       decoding="async" data-full="${esc(photoUrl(p))}">`)
     .join("");
+  const photos = full && several ? "" : photoTags(photoPaths);
 
   // Several meals: one line each with its own score; the seal is repeated
   // per meal only when the meals do not all carry the same one.
@@ -489,6 +499,7 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
             ? `<div class="meal-seal">${esc([seals.length > 1 ? m.hechsher : "", caterers.length > 1 && m.caterer ? `catered by ${m.caterer}` : ""].filter(Boolean).join(" · "))}</div>` : ""}
           ${dietBadges(m.diets)}
           ${m.comment ? `<p class="comment">${esc(m.comment)}</p>` : ""}
+          ${full && m.photos?.length ? `<div class="photos">${photoTags(m.photos)}</div>` : ""}
         </li>`).join("")}</ol>`
     : "";
 
@@ -522,10 +533,13 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
        <div class="num">${esc(rating)}<small>/5 meal</small></div>`;
 
   return `
-    <article class="review${several ? " several" : ""}" data-id="${esc(review.id)}">
+    <article class="review${several ? " several" : ""}${full ? " full" : ""}" data-id="${esc(review.id)}"${
+      full ? "" : ` data-href="${esc(reviewHref(review))}"`}>
       <div class="review-top">
         <div>
-          <div class="review-head">${logo}<h3>${esc(title || "Unknown flight")}</h3></div>
+          <div class="review-head">${logo}<h3>${full
+            ? esc(title || "Unknown flight")
+            : `<a class="review-link" href="${esc(reviewHref(review))}">${esc(title || "Unknown flight")}</a>`}</h3></div>
           ${operated}
           <div class="route">${esc(route)}${
             !several && only.meal_name ? `<span class="sep">·</span>${esc(only.meal_name)}` : ""}</div>
@@ -545,7 +559,33 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
     </article>`;
 }
 
-/** Click any review photo to open it full size. Call once per page. */
+/**
+ * Makes a click anywhere on a report card open that report, photos included,
+ * so a card behaves the same wherever you click it. Buttons and links inside
+ * the card (Edit, Delete) keep their own behavior, selecting text does not
+ * navigate, and Ctrl/Cmd-click or a middle click opens a new tab like a link.
+ */
+export function enableReviewLinks(root = document) {
+  const target = (event) => {
+    const card = event.target.closest(".review[data-href]");
+    if (!card || !root.contains(card)) return null;
+    if (event.target.closest("a, button, input, select, textarea, label, summary, dialog")) return null;
+    if (String(window.getSelection?.() || "").trim()) return null;
+    return card.dataset.href;
+  };
+  root.addEventListener("click", (event) => {
+    const href = target(event);
+    if (!href) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey) window.open(href, "_blank", "noopener");
+    else window.location.href = href;
+  });
+  root.addEventListener("auxclick", (event) => {
+    const href = event.button === 1 && target(event);
+    if (href) window.open(href, "_blank", "noopener");
+  });
+}
+
+/** Click any review photo to open it full size. Used on a report's own page. */
 export function enablePhotoLightbox(root = document) {
   const dialog = document.createElement("dialog");
   dialog.className = "lightbox";

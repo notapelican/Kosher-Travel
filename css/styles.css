@@ -632,6 +632,23 @@ input[type="file"] { padding: 10px 13px; background: var(--surface-2); cursor: p
   font-weight: 600;
 }
 
+/* a card in a list opens its report wherever you click it */
+.review[data-href] { cursor: pointer; }
+.review-link { color: inherit; text-decoration: none; }
+.review-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+@media (hover: hover) { .review[data-href]:hover .review-link { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; } }
+
+/* a report's own page */
+.review.full { padding: var(--sp-5); }
+.review.full h3 { font-size: 22px; }
+.review.full .photos img { cursor: zoom-in; }
+.review.full .meal-list li { padding-top: var(--sp-3); }
+.review.full .meal-list .photos { margin-top: var(--sp-2); }
+.report-nav { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); margin: 0 0 var(--sp-4); }
+.report-nav a { color: var(--muted); text-decoration: none; font-weight: 600; font-size: 14px; }
+.report-nav a:hover { color: var(--accent); }
+.report-more { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-4); }
+
 .review .comment { margin: var(--sp-3) 0 0; color: var(--ink-2); white-space: pre-wrap; }
 
 /* a report with several meals lists them, each with its own score */
@@ -660,7 +677,6 @@ input[type="file"] { padding: 10px 13px; background: var(--surface-2); cursor: p
   border-radius: var(--r-md);
   border: 1px solid var(--border);
   background: var(--surface-2);
-  cursor: zoom-in;
   transition: transform .18s, box-shadow .18s;
 }
 @media (hover: hover) {

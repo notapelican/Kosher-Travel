@@ -1,5 +1,5 @@
 import {
-  supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard, enablePhotoLightbox,
+  supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard, enableReviewLinks,
   notify, formatDate, esc, PHOTO_BUCKET, PRESETS, currentDesign, designReady, saveDesign, reportPhotoPaths, $
 } from "./app.js";
 
@@ -10,7 +10,7 @@ let profile = null;
 /** user id -> profile, so anonymous reviews can still be attributed here. */
 let usersById = new Map();
 
-enablePhotoLightbox(list);
+enableReviewLinks(list);
 init();
 
 async function init() {
