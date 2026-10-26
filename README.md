@@ -22,6 +22,8 @@ js/config.js    <- the only file you have to edit
 js/app.js       Supabase client, auth, shared rendering
 js/browse.js  js/airlines.js  js/submit.js  js/mine.js  js/admin.js
 js/options.js   airline / hechsher / meal lists, and the experience-score wording
+js/airports.js  airport autocomplete
+data/airports.json   the airports the site accepts (built by tools/build_airports.py)
 supabase/schema.sql       tables, row-level security, storage bucket
 supabase/migrations/      changes to apply to an already-deployed database
 ```
@@ -47,6 +49,26 @@ Edge Function (setup step 6): a search for a real flight with no reports yet get
 add yours" prompt, a search for a flight that does not exist says so, and the rating form will
 not post to a flight the lookup rejects. Validated flights carry their route, operating carrier
 and aircraft onto each report.
+
+### Airports
+
+Every place on the site is an airport, picked from a list as you type a city, an airport name
+or a code ("tel", "ben gurion" and "TLV" all find Tel Aviv). On the rating form the airport the
+meals were loaded at and the destination accept only an airport from the list, so a typo cannot
+become a new city; a report stores them as "City (IATA)", e.g. "New York (JFK)". When the flight
+number checked out, the form fills in the destination and offers the flight's airports first. The
+search strip suggests airports too but still searches any text, so "new york" finds JFK and
+LaGuardia together.
+
+The list is `data/airports.json`: 5,300 airports from [OurAirports](https://ourairports.com/data/)
+(public domain) — every large and medium airport with an IATA code plus small ones with
+scheduled service. It is about 120 KB compressed and loads only when someone uses an airport
+field. To refresh it, download `airports.csv` and `countries.csv` from
+[ourairports-data](https://github.com/davidmegginson/ourairports-data) and run
+`python3 tools/build_airports.py airports.csv countries.csv`. City names for airports that sit in
+a suburb ("Ferno" is Milan Malpensa) and the main airport of multi-airport cities are set at the
+top of that script. If the list ever fails to load, the fields fall back to plain text rather
+than blocking the form.
 
 ## What a rating records
 

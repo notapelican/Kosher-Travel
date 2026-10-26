@@ -3,6 +3,7 @@ import {
   fillSelect, photoUrl, PHOTO_BUCKET, stars, loadAirlines, lookupFlight, parseFlightNumber, reportMeals, $, $$, esc
 } from "./app.js";
 import { AIRLINES, HECHSHERIM, MEAL_TYPES, CABIN_CLASSES, EXPERIENCE_SCORES } from "./options.js";
+import { airportPicker } from "./airports.js";
 
 const form = $("#review-form");
 const gate = $("#signin-gate");
@@ -44,6 +45,15 @@ loadAirlines().then((rows) => {
   if (rows.length) fillDatalist("airlines", [...new Set([...rows.map((a) => a.name), ...AIRLINES])].sort((a, b) => a.localeCompare(b)));
 });
 fillSelect($("#cabin_class"), CABIN_CLASSES, "Not sure");
+
+// Only real airports: both fields refuse anything not picked from the list.
+// While empty, they offer the airports of the flight that was looked up.
+const originPicker = airportPicker($("#origin_city"), {
+  strict: true, suggest: () => [flight.data?.origin_iata, flight.data?.destination_iata]
+});
+const destinationPicker = airportPicker($("#destination_city"), {
+  strict: true, suggest: () => [flight.data?.destination_iata]
+});
 
 init();
 
@@ -131,8 +141,9 @@ async function checkFlight() {
     flight = { id: f.id, state: "ok", data: f };
     const route = [f.origin_iata, f.destination_iata].filter(Boolean).join(" → ");
     setFlightStatus(["Found", route, f.aircraft, f.codeshare ? "codeshare" : ""].filter(Boolean).join(" · "), "ok");
-    if (!$("#origin_city").value.trim() && f.origin_iata) $("#origin_city").placeholder = `${f.origin_iata}, or the city it was actually loaded in`;
-    if (!$("#destination_city").value.trim() && f.destination_iata) $("#destination_city").value = f.destination_iata;
+    // The meals are usually loaded where the flight departs, but not always
+    // (some airlines cater the return leg too), so the origin is offered, not filled in.
+    if (!$("#destination_city").value.trim() && f.destination_iata) await destinationPicker.setCode(f.destination_iata);
   } else if (result.unavailable) {
     flight = { id: null, state: "unknown" };
     setFlightStatus("Could not verify this flight right now; you can still post.");
@@ -381,6 +392,9 @@ async function loadForEdit(id) {
     if (control) control.value = data[key] ?? "";
   }
   if (data.flight_id) { flight = { id: data.flight_id, state: "ok" }; setFlightStatus("Flight on record", "ok"); }
+  // older reports may hold free text: it is tidied to "City (IATA)" if it names one airport, flagged if not
+  originPicker.recheck();
+  destinationPicker.recheck();
   $("#post_as").value = data.is_anonymous ? "anon" : "name";
   $("#post_as").dispatchEvent(new Event("change"));
 
@@ -540,8 +554,8 @@ form.addEventListener("submit", async (event) => {
       airline_iata: airlineRow?.iata || null,
       flight_id: flight.state === "ok" ? flight.id : null,
       flight_number: orNull("flight_number"),
-      origin_city: value("origin_city"),
-      destination_city: orNull("destination_city"),
+      origin_city: originPicker.label() || value("origin_city"),
+      destination_city: destinationPicker.label() || orNull("destination_city"),
       flight_date: orNull("flight_date"),
       cabin_class: orNull("cabin_class"),
       experience_notes: orNull("experience_notes"),

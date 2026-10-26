@@ -4,6 +4,7 @@ import {
   currentDesign, photoUrl, formatDate, timeAgo, stars, esc, LOGO, $, $$
 } from "./app.js";
 import { EXPERIENCE_SCORES } from "./options.js";
+import { airportPicker } from "./airports.js";
 
 const PAGE_SIZE = 18;
 
@@ -24,6 +25,8 @@ let firstPage = [];      // the latest page, for the night skin's featured panel
 renderHeader("index.html");
 enablePhotoLightbox(list);
 readUrl();
+// suggest airports, but any text still searches (a city name matches all its airports)
+for (const id of ["#f-from", "#f-to"]) airportPicker($(id), { fill: "code" });
 
 if (!isConfigured) {
   renderSetupWarning();

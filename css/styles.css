@@ -902,6 +902,41 @@ input[type="file"]:focus-visible + .uploader { outline: 2px solid var(--accent);
   .thumb button { width: 24px; height: 24px; top: -7px; right: -7px; font-size: 15px; }
 }
 
+/* airport autocomplete ---------------------------------------------------
+   The list hangs off <body> so no card or accordion can clip it. */
+.ap-list {
+  position: absolute;
+  z-index: 1000;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+}
+.ap-list[hidden] { display: none; }
+.ap-list li[role="option"] {
+  display: grid;
+  gap: 1px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.ap-list li[aria-selected="true"] { background: var(--accent-tint); }
+@media (hover: hover) { .ap-list li[role="option"]:hover { background: var(--surface-2); } .ap-list li[aria-selected="true"]:hover { background: var(--accent-tint); } }
+.ap-head { padding: 6px 10px 4px; font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.ap-main { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); font-size: 14.5px; text-transform: none; }
+.ap-main b { font-weight: 640; }
+.ap-code { flex: none; font-family: var(--font-mono, ui-monospace, monospace); font-size: 12.5px; font-weight: 600; color: var(--accent); letter-spacing: .04em; }
+.ap-sub { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: none; }
+.ap-error { color: var(--danger); }
+.ap-error[hidden] { display: none; }
+input[aria-invalid] { border-color: var(--danger); }
+
 /* several meals on one report ------------------------------------------ */
 .meal-remove { display: flex; justify-content: flex-end; margin-top: var(--sp-2); }
 .meal-remove[hidden] { display: none; }
