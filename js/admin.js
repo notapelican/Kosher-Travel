@@ -83,7 +83,7 @@ async function loadReviews() {
     const term = `%${q.replace(/[,()]/g, " ")}%`;
     // meal text lives on review_meals: find those reports first
     const { data: hits } = await supabase.from("review_meals").select("review_id")
-      .or(["meal_type", "meal_name", "hechsher", "comment"].map((col) => `${col}.ilike.${term}`).join(","))
+      .or(["meal_type", "meal_name", "hechsher", "caterer", "comment"].map((col) => `${col}.ilike.${term}`).join(","))
       .limit(500);
     const ids = [...new Set((hits || []).map((h) => h.review_id))];
     query = query.or([

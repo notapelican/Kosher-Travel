@@ -79,8 +79,9 @@ written"), so nothing you filled in is hidden from you. A required field can nev
 in a closed section: submitting opens all of them first.
 
 **The meals.** Each meal served on the flight gets its own block: which meal it was
-(dinner, breakfast, a snack…), a required 1–5 score, the hechsher on the seal, what it
-actually was, an optional write-up, and up to four photos of the tray. One block is there to
+(dinner, breakfast, a snack…), a required 1–5 score, the hechsher on the seal, the caterer
+named on the box (Regal, Lewis'…), what it actually was, the diets it suited, an optional
+write-up, and up to four photos of the tray. One block is there to
 start; "Add another meal from this flight" adds more, up to six, and any block can be removed
 while there is more than one. (Airline and the city the meals were loaded in are required too,
 and sit in the flight card above.)
@@ -96,6 +97,17 @@ Reports are written through the `save_report()` function, which saves the flight
 in one transaction under the caller's own row-level security. `reviews_public` returns one row
 per report with its meals as JSON, plus the summary columns the list pages filter and sort on.
 Reports saved before migration 005 became one-meal reports.
+
+**Diets.** Each meal can be marked as suitable for any of: vegetarian, vegan, gluten free,
+coeliac safe, peanut free, tree-nut free, dairy free, egg free, sesame free and diabetic
+friendly. The form shows them as tappable chips with an icon each; reports show the ones
+picked, with the same icons. The list, labels and icons are `DIETS` in
+[`js/options.js`](js/options.js); the database accepts only those keys
+(`review_meals_diets_check`), so a new diet goes in both places.
+
+**Caterers and hechsherim** are suggested as you type but never restricted, since new ones
+turn up. Caterer suggestions include every caterer already named on the site, so spellings
+converge; the starting lists are `CATERERS` and `HECHSHERIM` in `js/options.js`.
 
 **The travel experience** — how the airline treated you as a Jewish traveler. Entirely
 optional, and its scores and its write-up are independent: score both, score neither and just

@@ -937,6 +937,32 @@ input[type="file"]:focus-visible + .uploader { outline: 2px solid var(--accent);
 .ap-error[hidden] { display: none; }
 input[aria-invalid] { border-color: var(--danger); }
 
+/* diets: chips on the form, badges on reports ---------------------------- */
+.diet-picker { border: 0; padding: 0; margin: 0 0 var(--sp-4); min-width: 0; }
+.diet-picker legend { padding: 0; margin-bottom: 6px; font-size: 13.5px; font-weight: 600; }
+.diet-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.diet-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 0; padding: 6px 11px 6px 8px;
+  border: 1px solid var(--border-strong); border-radius: var(--r-pill);
+  background: var(--surface); color: var(--ink-2);
+  font-size: 13px; font-weight: 500; cursor: pointer; user-select: none;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.diet-chip .diet-icon { color: var(--muted); flex: none; }
+.diet-chip:has(input:checked) { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.diet-chip:has(input:checked) .diet-icon { color: var(--accent); }
+.diet-chip:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (hover: hover) { .diet-chip:hover { border-color: var(--accent); } }
+
+.diets { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: var(--sp-2); }
+.diet {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600; color: var(--accent);
+}
+.diet .diet-icon { width: 16px; height: 16px; }
+.meal-list .diets { margin-top: 4px; }
+
 /* several meals on one report ------------------------------------------ */
 .meal-remove { display: flex; justify-content: flex-end; margin-top: var(--sp-2); }
 .meal-remove[hidden] { display: none; }

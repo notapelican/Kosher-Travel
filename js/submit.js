@@ -2,7 +2,7 @@ import {
   supabase, isConfigured, renderHeader, renderSetupWarning, openAuthDialog, notify, fillDatalist,
   fillSelect, photoUrl, PHOTO_BUCKET, stars, loadAirlines, lookupFlight, parseFlightNumber, reportMeals, $, $$, esc
 } from "./app.js";
-import { AIRLINES, HECHSHERIM, MEAL_TYPES, CABIN_CLASSES, EXPERIENCE_SCORES } from "./options.js";
+import { AIRLINES, HECHSHERIM, CATERERS, DIETS, dietIcon, MEAL_TYPES, CABIN_CLASSES, EXPERIENCE_SCORES } from "./options.js";
 import { airportPicker } from "./airports.js";
 
 const form = $("#review-form");
@@ -40,6 +40,14 @@ $("#experience-fields").innerHTML = EXPERIENCE_SCORES.map(({ key, label, help, s
 
 fillDatalist("airlines", AIRLINES);
 fillDatalist("hechsherim", HECHSHERIM);
+fillDatalist("caterers", CATERERS);
+// suggest every caterer travelers have already named, so spellings converge
+if (isConfigured) {
+  supabase.from("reviews_public").select("caterers").limit(3000).then(({ data }) => {
+    const named = (data || []).flatMap((r) => r.caterers || []);
+    if (named.length) fillDatalist("caterers", [...new Set([...CATERERS, ...named])].sort((a, b) => a.localeCompare(b)));
+  });
+}
 loadAirlines().then((rows) => {
   airlines = rows;
   if (rows.length) fillDatalist("airlines", [...new Set([...rows.map((a) => a.name), ...AIRLINES])].sort((a, b) => a.localeCompare(b)));
@@ -292,10 +300,22 @@ function addMeal(data = {}) {
           <input id="${id("hechsher")}" data-f="hechsher" list="hechsherim" autocomplete="off" placeholder="Belz Machzikei Hadass">
         </div>
         <div class="field">
-          <label for="${id("meal_name")}">What was it? <span class="hint">e.g. chicken and rice</span></label>
-          <input id="${id("meal_name")}" data-f="meal_name" autocomplete="off" placeholder="Grilled chicken, rice, cold salad">
+          <label for="${id("caterer")}">Caterer <span class="hint">the name on the box</span></label>
+          <input id="${id("caterer")}" data-f="caterer" list="caterers" autocomplete="off" placeholder="Regal, Lewis'…">
         </div>
       </div>
+      <div class="field">
+        <label for="${id("meal_name")}">What was it? <span class="hint">e.g. chicken and rice</span></label>
+        <input id="${id("meal_name")}" data-f="meal_name" autocomplete="off" placeholder="Grilled chicken, rice, cold salad">
+      </div>
+      <fieldset class="field diet-picker" data-f="diets">
+        <legend>Suitable for <span class="hint">pick any that were marked or that you checked</span></legend>
+        <div class="diet-chips">${DIETS.map((d) => `
+          <label class="diet-chip">
+            <input type="checkbox" value="${d.key}" class="sr-only">
+            ${dietIcon(d.key)}<span>${esc(d.label)}</span>
+          </label>`).join("")}</div>
+      </fieldset>
       <div class="field">
         <label for="${id("comment")}">About the meal <span class="hint">optional</span></label>
         <textarea id="${id("comment")}" data-f="comment" maxlength="4000"
@@ -318,7 +338,8 @@ function addMeal(data = {}) {
 
   const meal = { key, el, attachments: [] };
   fillSelect(field(meal, "meal_type"), MEAL_TYPES, "Not sure");
-  for (const name of ["meal_type", "hechsher", "meal_name", "comment"]) field(meal, name).value = data[name] ?? "";
+  for (const name of ["meal_type", "hechsher", "caterer", "meal_name", "comment"]) field(meal, name).value = data[name] ?? "";
+  for (const box of field(meal, "diets").querySelectorAll("input")) box.checked = (data.diets || []).includes(box.value);
   if (data.rating) field(meal, "rating").value = String(data.rating);
   // a meal type saved before the list changed still shows
   if (data.meal_type && field(meal, "meal_type").value !== data.meal_type) {
@@ -542,6 +563,8 @@ form.addEventListener("submit", async (event) => {
         meal_type: text("meal_type"),
         meal_name: text("meal_name"),
         hechsher: text("hechsher"),
+        caterer: text("caterer"),
+        diets: [...field(meal, "diets").querySelectorAll("input:checked")].map((box) => box.value),
         rating: Number(field(meal, "rating").value),
         comment: text("comment"),
         photos: await uploadPending(meal)

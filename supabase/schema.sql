@@ -600,6 +600,16 @@ create table if not exists public.review_meals (
 create index if not exists review_meals_review_idx on public.review_meals (review_id);
 create index if not exists review_meals_hechsher_idx on public.review_meals (hechsher);
 
+-- Who catered the meal, and the diets it suits. Diet keys must match DIETS in js/options.js.
+alter table public.review_meals add column if not exists caterer text;
+alter table public.review_meals add column if not exists diets text[] not null default '{}';
+alter table public.review_meals drop constraint if exists review_meals_diets_check;
+alter table public.review_meals add constraint review_meals_diets_check check (diets <@ array[
+  'vegetarian', 'vegan', 'gluten_free', 'coeliac', 'peanut_free', 'nut_free',
+  'dairy_free', 'egg_free', 'sesame_free', 'diabetic'
+]::text[]);
+create index if not exists review_meals_caterer_idx on public.review_meals (caterer);
+
 alter table public.review_meals enable row level security;
 
 -- A meal belongs to whoever owns its report. Signed-out visitors read meals
@@ -643,10 +653,12 @@ create view public.reviews_public as
     select review_id,
            jsonb_agg(jsonb_build_object(
              'position', position, 'meal_type', meal_type, 'meal_name', meal_name,
-             'hechsher', hechsher, 'rating', rating, 'comment', comment,
+             'hechsher', hechsher, 'caterer', caterer, 'diets', to_jsonb(diets),
+             'rating', rating, 'comment', comment,
              'photos', to_jsonb(photos)) order by position)                         as meals,
            round(avg(rating)::numeric, 2)                                            as rating,
            array_remove(array_agg(distinct hechsher), null)                          as hechshers,
+           array_remove(array_agg(distinct caterer), null)                           as caterers,
            (array_agg(hechsher order by position) filter (where hechsher is not null))[1] as hechsher,
            string_agg(meal_name, ' · ' order by position) filter (where meal_name is not null) as meal_name,
            string_agg(meal_type, ' · ' order by position) filter (where meal_type is not null) as meal_type
@@ -661,6 +673,7 @@ create view public.reviews_public as
          coalesce(m.meal_name, case when m.review_id is null then r.meal_name end) as meal_name,
          coalesce(m.hechsher, case when m.review_id is null then r.hechsher end)   as hechsher,
          case when m.review_id is null then array_remove(array[r.hechsher], null) else m.hechshers end as hechshers,
+         coalesce(m.caterers, '{}')                                                 as caterers,
          coalesce(m.rating, r.rating::numeric)                                      as rating,
          case when m.review_id is null then r.comment end                          as comment,
          case when m.review_id is null then r.photos
@@ -752,11 +765,13 @@ begin
 
   for meal in select value from jsonb_array_elements(meals) loop
     n := n + 1;
-    insert into review_meals (review_id, position, meal_type, meal_name, hechsher, rating, comment, photos)
+    insert into review_meals (review_id, position, meal_type, meal_name, hechsher, caterer, diets, rating, comment, photos)
     values (rid, n,
             nullif(trim(meal->>'meal_type'), ''),
             nullif(trim(meal->>'meal_name'), ''),
             nullif(trim(meal->>'hechsher'), ''),
+            nullif(trim(meal->>'caterer'), ''),
+            coalesce(array(select distinct d from jsonb_array_elements_text(coalesce(meal->'diets', '[]'::jsonb)) d order by d), '{}'),
             (meal->>'rating')::smallint,
             nullif(trim(meal->>'comment'), ''),
             coalesce(array(select jsonb_array_elements_text(coalesce(meal->'photos', '[]'::jsonb))), '{}'));

@@ -251,3 +251,20 @@ select 'edited report keeps its id: ' || (public.save_report('{"airline":"El Al"
    '[{"meal_type":"Snack","rating":3}]'::jsonb, (select id from public.reviews where flight_number = 'LY 26')) = (select id from public.reviews where flight_number = 'LY 26'));
 select 'meals after edit: ' || string_agg(m.meal_type || '/' || m.rating, ', ') from public.review_meals m join public.reviews r on r.id = m.review_id where r.flight_number = 'LY 26';
 rollback;
+
+\echo ''
+\echo '=== 22. Caterer and diets are saved per meal and shown in the view; unknown diets are refused (expect: one error) ==='
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+select public.save_report('{"airline":"El Al","flight_number":"LY 8","origin_city":"New York (JFK)"}'::jsonb,
+  '[{"rating":4,"caterer":"Regal","diets":["vegetarian","gluten_free","vegetarian"]},{"rating":3,"caterer":"Lewis''"}]'::jsonb);
+set local role anon;
+select 'caterers: ' || array_to_string(caterers, ', ') || ' | meal 1 diets: ' || (meals->0->'diets')::text || ' | meal 2 diets: ' || (meals->1->'diets')::text
+from public.reviews_public where flight_number = 'LY 8';
+rollback;
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+select public.save_report('{"airline":"El Al","origin_city":"JFK"}'::jsonb, '[{"rating":4,"diets":["carnivore"]}]'::jsonb);
+rollback;

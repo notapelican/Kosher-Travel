@@ -1,6 +1,6 @@
 import { createClient } from "./vendor/supabase.js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY, SITE_NAME, GOOGLE_CLIENT_ID } from "./config.js";
-import { EXPERIENCE_SCORES } from "./options.js";
+import { EXPERIENCE_SCORES, DIETS, dietIcon } from "./options.js";
 import { applyDesign, cachedDesign, currentDesign, PRESETS } from "./design.js";
 export { applyDesign, currentDesign, PRESETS };
 
@@ -451,10 +451,18 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
     ? meals.reduce((sum, m) => sum + Number(m.rating || 0), 0) / meals.length
     : Number(review.rating) || 0;
   const seals = [...new Set(meals.map((m) => (m.hechsher || "").trim()).filter(Boolean))];
+  const caterers = [...new Set(meals.map((m) => (m.caterer || "").trim()).filter(Boolean))];
+  const dietBadges = (keys) => {
+    const known = DIETS.filter((d) => (keys || []).includes(d.key));
+    return known.length
+      ? `<div class="diets">${known.map((d) => `<span class="diet" title="${esc(d.label)}">${dietIcon(d.key)}${esc(d.label)}</span>`).join("")}</div>`
+      : "";
+  };
 
   const route = [review.origin_city || review.origin_iata, review.destination_city || review.destination_iata].filter(Boolean).join(" → ");
   const tags = [
     ...seals.map((seal) => `<span class="tag hechsher">${esc(seal)}</span>`),
+    ...caterers.map((name) => `<span class="tag">Catered by ${esc(name)}</span>`),
     !several && only.meal_type ? `<span class="tag">${esc(only.meal_type)}</span>` : "",
     review.cabin_class ? `<span class="tag">${esc(review.cabin_class)}</span>` : "",
     review.flight_date ? `<span class="tag">Flown ${esc(formatDate(review.flight_date))}</span>` : "",
@@ -477,7 +485,9 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
               m.meal_name ? ` ${esc(m.meal_name)}` : ""}</span>
             <span class="meal-score">${stars(m.rating)}<span class="n">${esc(m.rating)}</span></span>
           </div>
-          ${seals.length > 1 && m.hechsher ? `<div class="meal-seal">${esc(m.hechsher)}</div>` : ""}
+          ${(seals.length > 1 && m.hechsher) || (caterers.length > 1 && m.caterer)
+            ? `<div class="meal-seal">${esc([seals.length > 1 ? m.hechsher : "", caterers.length > 1 && m.caterer ? `catered by ${m.caterer}` : ""].filter(Boolean).join(" · "))}</div>` : ""}
+          ${dietBadges(m.diets)}
           ${m.comment ? `<p class="comment">${esc(m.comment)}</p>` : ""}
         </li>`).join("")}</ol>`
     : "";
@@ -523,6 +533,7 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
         <div class="score-badge">${badge}</div>
       </div>
       ${tags ? `<div class="meta">${tags}</div>` : ""}
+      ${several ? "" : dietBadges(only.diets)}
       ${!several && only.comment ? `<p class="comment">${esc(only.comment)}</p>` : ""}
       ${mealList}
       ${experience}
