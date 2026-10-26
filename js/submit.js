@@ -1,19 +1,26 @@
 import {
   supabase, isConfigured, renderHeader, renderSetupWarning, openAuthDialog, notify, fillDatalist,
-  fillSelect, photoUrl, PHOTO_BUCKET, stars, loadAirlines, lookupFlight, parseFlightNumber, $, $$, esc
+  fillSelect, photoUrl, PHOTO_BUCKET, stars, loadAirlines, lookupFlight, parseFlightNumber, reportMeals, $, $$, esc
 } from "./app.js";
 import { AIRLINES, HECHSHERIM, MEAL_TYPES, CABIN_CLASSES, EXPERIENCE_SCORES } from "./options.js";
 
 const form = $("#review-form");
 const gate = $("#signin-gate");
 const msg = $("#form-msg");
-const thumbs = $("#thumbs");
-const MAX_PHOTOS = 4;
+const mealsBox = $("#meals");
+const MAX_MEALS = 6;
+const MAX_PHOTOS = 4;       // per meal
 const MAX_EDGE = 1600;      // px, longest side after client-side resize
 const JPEG_QUALITY = 0.82;
 
-/** { file?: File, path?: string, url: string } — path set once uploaded/pre-existing. */
-let attachments = [];
+/**
+ * The meals on this report, in order. Each has its own block in the form and
+ * its own photos: { key, el, attachments: [{ file?, path?, url }] }, where
+ * path is set once a photo is uploaded or was already saved.
+ */
+let meals = [];
+let nextMealKey = 1;
+let savedPhotos = [];              // photo paths the report had when loaded for editing
 let editingId = null;
 let profile = null;
 let airlines = [];                 // from the airlines table
@@ -37,7 +44,6 @@ loadAirlines().then((rows) => {
   if (rows.length) fillDatalist("airlines", [...new Set([...rows.map((a) => a.name), ...AIRLINES])].sort((a, b) => a.localeCompare(b)));
 });
 fillSelect($("#cabin_class"), CABIN_CLASSES, "Not sure");
-fillSelect($("#meal_type"), MEAL_TYPES, "Not sure");
 
 init();
 
@@ -69,7 +75,8 @@ async function init() {
 
   const params = new URLSearchParams(location.search);
   if (params.get("edit")) await loadForEdit(params.get("edit"));
-  else if (params.get("flight")) {
+  if (!meals.length) addMeal();
+  if (!params.get("edit") && params.get("flight")) {
     $("#flight_number").value = params.get("flight").toUpperCase();
     await checkFlight();
   }
@@ -142,17 +149,8 @@ async function checkFlight() {
  * required field can never be hidden when the browser validates the form.
  */
 function wireAccordions() {
-  const sections = $$(".accordion");
-
   const refresh = () => {
-    const rating = $("#rating").value;
-    const photos = attachments.length
-      ? `${attachments.length} photo${attachments.length > 1 ? "s" : ""}`
-      : "";
-    setState("#state-meal", rating
-      ? `${stars(rating)}<span class="label-text">${photos ? ` · ${photos}` : ""}</span>`
-      : `<span class="label-text">${photos || "Not scored yet"}</span>`,
-      Boolean(rating) || Boolean(photos));
+    for (const meal of meals) refreshMealState(meal);
 
     const scores = EXPERIENCE_SCORES.filter(({ key }) => $(`#${key}`).value).length;
     const written = $("#experience_notes").value.trim().length > 0;
@@ -171,25 +169,38 @@ function wireAccordions() {
 
   form.addEventListener("input", refresh);
   form.addEventListener("change", refresh);
-  drawThumbs.onchange = refresh;
   refresh();
 
   // A required control inside a closed <details> cannot be focused, so the
   // browser would block submission with no visible explanation. Open
   // everything first, and re-open whatever a validation error lands in.
+  // Meal blocks come and go, so listen on the form ("invalid" only reaches
+  // it while capturing).
   $("#submit-btn").addEventListener("click", () => {
-    for (const section of sections) section.open = true;
+    for (const section of $$(".accordion", form)) section.open = true;
   });
-  for (const control of $$("#review-form input, #review-form select, #review-form textarea")) {
-    control.addEventListener("invalid", () => {
-      const section = control.closest(".accordion");
-      if (section) section.open = true;
-    });
-  }
+  form.addEventListener("invalid", (event) => {
+    const section = event.target.closest(".accordion");
+    if (section) section.open = true;
+  }, true);
+}
+
+function refreshMealState(meal) {
+  const rating = field(meal, "rating").value;
+  const n = meal.attachments.length;
+  const photos = n ? `${n} photo${n > 1 ? "s" : ""}` : "";
+  setState(meal.el.querySelector(".accordion-state"), rating
+    ? `${stars(rating)}<span class="label-text">${photos ? ` · ${photos}` : ""}</span>`
+    : `<span class="label-text">${photos || "Not scored yet"}</span>`,
+    Boolean(rating) || Boolean(photos));
+  const kind = field(meal, "meal_type").value;
+  const what = field(meal, "meal_name").value.trim();
+  meal.el.querySelector(".accordion-sub").textContent =
+    [kind, what].filter(Boolean).join(" · ") || "Score it, describe it, add photos";
 }
 
 function setState(selector, html, isSet) {
-  const target = $(selector);
+  const target = typeof selector === "string" ? $(selector) : selector;
   if (!target) return;
   target.innerHTML = html;
   target.classList.toggle("is-set", Boolean(isSet));
@@ -214,10 +225,145 @@ function wireBylineChoice() {
   describe();
 }
 
+/* ----------------------------------------------------------------- meal blocks */
+
+const SCORE_OPTIONS = `
+  <option value="">Pick a score</option>
+  <option value="5">★★★★★ — genuinely good</option>
+  <option value="4">★★★★ — solid</option>
+  <option value="3">★★★ — fine, ate it</option>
+  <option value="2">★★ — rough</option>
+  <option value="1">★ — inedible</option>`;
+
+const UPLOAD_ICON = `
+  <svg viewBox="0 0 32 32" fill="none">
+    <path d="M16 3.2c1.3 0 2.1 1.6 2.1 3.7v14.3l1.9 2.4v2L16 24.3l-4 1.3v-2l1.9-2.4V6.9c0-2.1.8-3.7 2.1-3.7Z" fill="currentColor"/>
+    <path d="M13.4 11.6H6.9v1.4H2.4v1.3h4.5v1.4h6.5z" fill="currentColor"/>
+    <path d="M18.6 11.9h5.1c3 0 5.6 1 5.6 2s-2.6 2-5.6 2h-5.1z" fill="currentColor"/>
+  </svg>`;
+
+/** The control for one of a meal's fields: meal_type, rating, hechsher, meal_name, comment, photos. */
+function field(meal, name) {
+  return meal.el.querySelector(`[data-f="${name}"]`);
+}
+
+/** Adds a meal block, filled from `data` when editing. Returns the meal. */
+function addMeal(data = {}) {
+  if (meals.length >= MAX_MEALS) return null;
+  const key = nextMealKey++;
+  const id = (name) => `m${key}-${name}`;
+  const el = document.createElement("details");
+  el.className = "accordion meal-block";
+  el.open = true;
+  el.innerHTML = `
+    <summary>
+      <span>
+        <span class="accordion-title">The meal</span>
+        <span class="accordion-sub">Score it, describe it, add photos</span>
+      </span>
+      <span class="accordion-state"></span>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </summary>
+    <div class="accordion-body">
+      <div class="grid-2">
+        <div class="field">
+          <label for="${id("rating")}">Meal score <span class="hint">required</span></label>
+          <select id="${id("rating")}" data-f="rating" required>${SCORE_OPTIONS}</select>
+        </div>
+        <div class="field">
+          <label for="${id("meal_type")}">Which meal</label>
+          <select id="${id("meal_type")}" data-f="meal_type"></select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="${id("hechsher")}">Hechsher on the seal</label>
+          <input id="${id("hechsher")}" data-f="hechsher" list="hechsherim" autocomplete="off" placeholder="Belz Machzikei Hadass">
+        </div>
+        <div class="field">
+          <label for="${id("meal_name")}">What was it? <span class="hint">e.g. chicken and rice</span></label>
+          <input id="${id("meal_name")}" data-f="meal_name" autocomplete="off" placeholder="Grilled chicken, rice, cold salad">
+        </div>
+      </div>
+      <div class="field">
+        <label for="${id("comment")}">About the meal <span class="hint">optional</span></label>
+        <textarea id="${id("comment")}" data-f="comment" maxlength="4000"
+          placeholder="Was it served hot? Still sealed? Did the crew know where it was? What was actually in the tray, and would you eat it again?"></textarea>
+      </div>
+      <div class="field">
+        <label for="${id("photos")}">Photos of the meal</label>
+        <input type="file" id="${id("photos")}" data-f="photos" accept="image/*" multiple class="sr-only">
+        <label class="uploader" for="${id("photos")}">
+          <span class="uploader-icon" aria-hidden="true">${UPLOAD_ICON}</span>
+          <span class="uploader-text">
+            <b>Add photos of the tray</b>
+            <span class="hint uploader-hint">Tap to choose, or drag them here</span>
+          </span>
+        </label>
+        <div class="thumbs"></div>
+      </div>
+      <div class="meal-remove"><button type="button" class="small ghost" data-remove-meal>Remove this meal</button></div>
+    </div>`;
+
+  const meal = { key, el, attachments: [] };
+  fillSelect(field(meal, "meal_type"), MEAL_TYPES, "Not sure");
+  for (const name of ["meal_type", "hechsher", "meal_name", "comment"]) field(meal, name).value = data[name] ?? "";
+  if (data.rating) field(meal, "rating").value = String(data.rating);
+  // a meal type saved before the list changed still shows
+  if (data.meal_type && field(meal, "meal_type").value !== data.meal_type) {
+    field(meal, "meal_type").insertAdjacentHTML("beforeend", `<option>${esc(data.meal_type)}</option>`);
+    field(meal, "meal_type").value = data.meal_type;
+  }
+  meal.attachments = (data.photos || []).map((path) => ({ path, url: photoUrl(path) }));
+
+  wireMealPhotos(meal);
+  el.querySelector("[data-remove-meal]").addEventListener("click", () => removeMeal(meal));
+
+  meals.push(meal);
+  mealsBox.append(el);
+  drawThumbs(meal);
+  renumberMeals();
+  return meal;
+}
+
+function removeMeal(meal) {
+  const filled = field(meal, "rating").value || field(meal, "meal_name").value.trim()
+    || field(meal, "comment").value.trim() || meal.attachments.length;
+  if (filled && !confirm("Remove this meal and what you entered for it?")) return;
+  meals = meals.filter((m) => m !== meal);
+  meal.el.remove();
+  renumberMeals();
+  form.dispatchEvent(new Event("input"));
+}
+
+/** Titles read "The meal" for one, "Meal 1", "Meal 2"… for several. */
+function renumberMeals() {
+  const several = meals.length > 1;
+  meals.forEach((meal, i) => {
+    meal.el.querySelector(".accordion-title").textContent = several ? `Meal ${i + 1}` : "The meal";
+    meal.el.querySelector(".meal-remove").hidden = !several;
+  });
+  const full = meals.length >= MAX_MEALS;
+  $("#add-meal").hidden = full;
+  $("#add-meal-hint").textContent = meals.length === 1
+    ? "Breakfast, a snack, the second service"
+    : `${MAX_MEALS - meals.length} more can be added`;
+}
+
+$("#add-meal").addEventListener("click", () => {
+  // fold away meals that are already scored, so the new one is easy to find
+  for (const meal of meals) if (field(meal, "rating").value) meal.el.open = false;
+  const meal = addMeal();
+  if (!meal) return;
+  form.dispatchEvent(new Event("input"));
+  meal.el.scrollIntoView({ behavior: "smooth", block: "start" });
+  field(meal, "rating").focus({ preventScroll: true });
+});
+
 /* ------------------------------------------------------------ edit an existing rating */
 
 async function loadForEdit(id) {
-  const { data, error } = await supabase.from("reviews").select("*").eq("id", id).maybeSingle();
+  const { data, error } = await supabase.from("reviews").select("*, review_meals(*)").eq("id", id).maybeSingle();
   if (error || !data) {
     notify(msg, "That rating could not be loaded for editing.", "error");
     return;
@@ -229,47 +375,55 @@ async function loadForEdit(id) {
   $("#cancel-link").href = "mine.html";
 
   for (const key of ["airline", "flight_number", "origin_city", "destination_city",
-                     "flight_date", "cabin_class", "meal_type", "meal_name",
-                     "hechsher", "comment", "experience_notes",
+                     "flight_date", "cabin_class", "experience_notes",
                      ...EXPERIENCE_SCORES.map((score) => score.key)]) {
-    const field = document.getElementById(key);
-    if (field) field.value = data[key] ?? "";
+    const control = document.getElementById(key);
+    if (control) control.value = data[key] ?? "";
   }
-  $("#rating").value = String(data.rating);
   if (data.flight_id) { flight = { id: data.flight_id, state: "ok" }; setFlightStatus("Flight on record", "ok"); }
   $("#post_as").value = data.is_anonymous ? "anon" : "name";
   $("#post_as").dispatchEvent(new Event("change"));
-  attachments = (data.photos || []).map((path) => ({ path, url: photoUrl(path) }));
-  drawThumbs();
+
+  const saved = reportMeals(data);
+  savedPhotos = saved.flatMap((m) => m.photos || []);
+  for (const m of saved) addMeal({ ...m, photos: (m.photos || []).slice(0, MAX_PHOTOS) });
+  // a long report opens folded, so the flight and the meal list fit on screen
+  if (meals.length > 1) for (const meal of meals) meal.el.open = false;
+  form.dispatchEvent(new Event("input"));
 }
 
 /* ---------------------------------------------------------------------- photos */
 
-async function addFiles(files) {
+async function addFiles(meal, files) {
   for (const file of Array.from(files || [])) {
-    if (attachments.length >= MAX_PHOTOS) break;
+    if (meal.attachments.length >= MAX_PHOTOS) break;
     if (!file.type.startsWith("image/")) continue;
     try {
       const resized = await shrinkImage(file);
-      attachments.push({ file: resized, url: URL.createObjectURL(resized) });
+      meal.attachments.push({ file: resized, url: URL.createObjectURL(resized) });
     } catch {
       notify(msg, `Could not read ${file.name}.`, "error");
     }
   }
-  drawThumbs();
+  drawThumbs(meal);
 }
 
-$("#photos").addEventListener("change", async (event) => {
-  const picked = event.target.files;
-  await addFiles(picked);
-  event.target.value = "";
-});
+function wireMealPhotos(meal) {
+  field(meal, "photos").addEventListener("change", async (event) => {
+    await addFiles(meal, event.target.files);
+    event.target.value = "";
+  });
 
-/* Drag and drop onto the upload area, for anyone on a desktop. */
-const uploader = $("#uploader");
-if (uploader) {
+  meal.el.querySelector(".thumbs").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-remove]");
+    if (!button) return;
+    meal.attachments.splice(Number(button.dataset.remove), 1);
+    drawThumbs(meal);
+  });
+
+  /* Drag and drop onto the upload area, for anyone on a desktop. */
+  const uploader = meal.el.querySelector(".uploader");
   const setDragging = (on) => uploader.classList.toggle("is-dragging", on);
-
   for (const type of ["dragenter", "dragover"]) {
     uploader.addEventListener(type, (event) => {
       event.preventDefault();
@@ -282,44 +436,36 @@ if (uploader) {
   uploader.addEventListener("drop", async (event) => {
     event.preventDefault();
     setDragging(false);
-    await addFiles(event.dataTransfer?.files);
+    await addFiles(meal, event.dataTransfer?.files);
   });
-  // Dropping anywhere else on the page should not navigate away from the form.
-  for (const type of ["dragover", "drop"]) {
-    window.addEventListener(type, (event) => {
-      if (!uploader.contains(event.target)) event.preventDefault();
-    });
-  }
 }
 
-function drawThumbs() {
-  drawThumbs.onchange?.();
+// Dropping a photo anywhere but an upload area should not navigate away from the form.
+for (const type of ["dragover", "drop"]) {
+  window.addEventListener(type, (event) => {
+    if (!event.target.closest?.(".uploader")) event.preventDefault();
+  });
+}
 
-  const hint = $("#uploader-hint");
+function drawThumbs(meal) {
+  const { attachments, el } = meal;
+  const hint = el.querySelector(".uploader-hint");
   const full = attachments.length >= MAX_PHOTOS;
-  if (hint) {
-    hint.textContent = !attachments.length
-      ? "Tap to choose, or drag them here"
-      : full
-        ? "Remove one to add another"
-        : `${attachments.length} photo${attachments.length > 1 ? "s" : ""} added`;
-  }
-  $("#uploader")?.classList.toggle("is-full", full);
+  hint.textContent = !attachments.length
+    ? "Tap to choose, or drag them here"
+    : full
+      ? "Remove one to add another"
+      : `${attachments.length} photo${attachments.length > 1 ? "s" : ""} added`;
+  el.querySelector(".uploader").classList.toggle("is-full", full);
 
-  thumbs.innerHTML = attachments
+  el.querySelector(".thumbs").innerHTML = attachments
     .map((a, i) => `<div class="thumb">
         <img src="${esc(a.url)}" alt="Selected meal photo ${i + 1}">
         <button type="button" data-remove="${i}" title="Remove photo" aria-label="Remove photo">×</button>
       </div>`)
     .join("");
+  refreshMealState(meal);
 }
-
-thumbs.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-remove]");
-  if (!button) return;
-  attachments.splice(Number(button.dataset.remove), 1);
-  drawThumbs();
-});
 
 /** Scale a photo down and re-encode as JPEG so uploads stay small and EXIF is dropped. */
 async function shrinkImage(file) {
@@ -336,19 +482,19 @@ async function shrinkImage(file) {
   return new File([blob], "meal.jpg", { type: "image/jpeg" });
 }
 
-async function uploadPending() {
+/** Uploads a meal's new photos; returns the storage paths of all its photos. */
+async function uploadPending(meal) {
   const paths = [];
-  for (const attachment of attachments) {
-    if (attachment.path) {
-      paths.push(attachment.path);
-      continue;
+  for (const attachment of meal.attachments) {
+    if (!attachment.path) {
+      const path = `${profile.id}/${crypto.randomUUID()}.jpg`;
+      const { error } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .upload(path, attachment.file, { contentType: "image/jpeg", cacheControl: "31536000" });
+      if (error) throw error;
+      attachment.path = path;   // a retry after a failed save does not upload it twice
     }
-    const path = `${profile.id}/${crypto.randomUUID()}.jpg`;
-    const { error } = await supabase.storage
-      .from(PHOTO_BUCKET)
-      .upload(path, attachment.file, { contentType: "image/jpeg", cacheControl: "31536000" });
-    if (error) throw error;
-    paths.push(path);
+    paths.push(attachment.path);
   }
   return paths;
 }
@@ -375,9 +521,21 @@ form.addEventListener("submit", async (event) => {
   }
 
   try {
-    const photos = await uploadPending();
+    const mealRows = [];
+    for (const meal of meals) {
+      const text = (name) => field(meal, name).value.trim() || null;
+      mealRows.push({
+        meal_type: text("meal_type"),
+        meal_name: text("meal_name"),
+        hechsher: text("hechsher"),
+        rating: Number(field(meal, "rating").value),
+        comment: text("comment"),
+        photos: await uploadPending(meal)
+      });
+    }
+
     const airlineRow = airlineByName(value("airline")) || (parseFlightNumber(value("flight_number")) && airlineByIata(parseFlightNumber(value("flight_number")).iata));
-    const payload = {
+    const report = {
       airline: value("airline"),
       airline_iata: airlineRow?.iata || null,
       flight_id: flight.state === "ok" ? flight.id : null,
@@ -386,23 +544,23 @@ form.addEventListener("submit", async (event) => {
       destination_city: orNull("destination_city"),
       flight_date: orNull("flight_date"),
       cabin_class: orNull("cabin_class"),
-      meal_type: orNull("meal_type"),
-      meal_name: orNull("meal_name"),
-      hechsher: orNull("hechsher"),
-      rating: Number(value("rating")),
-      comment: orNull("comment"),
       experience_notes: orNull("experience_notes"),
-      is_anonymous: $("#post_as").value === "anon",
-      photos
+      is_anonymous: $("#post_as").value === "anon"
     };
     for (const { key } of EXPERIENCE_SCORES) {
-      payload[key] = value(key) ? Number(value(key)) : null;
+      report[key] = value(key) ? Number(value(key)) : null;
     }
 
-    const { error } = editingId
-      ? await supabase.from("reviews").update(payload).eq("id", editingId)
-      : await supabase.from("reviews").insert({ ...payload, user_id: profile.id });
-    if (error) throw error;
+    const { error } = await supabase.rpc("save_report", { report, meals: mealRows, report_id: editingId });
+    if (error) {
+      if (error.code === "PGRST202") throw new Error("The site's database needs migration 005 (multiple meals) before ratings can be posted.");
+      throw error;
+    }
+
+    // photos taken off the report while editing are no longer used anywhere
+    const kept = new Set(mealRows.flatMap((m) => m.photos));
+    const dropped = savedPhotos.filter((path) => !kept.has(path) && !/^https?:/.test(path));
+    if (dropped.length) await supabase.storage.from(PHOTO_BUCKET).remove(dropped);
 
     window.location.href = editingId ? "mine.html?saved=1" : "index.html?posted=1";
   } catch (error) {

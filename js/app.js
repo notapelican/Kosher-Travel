@@ -422,20 +422,65 @@ export function emptyState(title, body = "") {
 
 /* ---------------------------------------------------- review card + photos */
 
+/**
+ * The meals on a report, in order. Rows from reviews_public carry them as
+ * `meals`; rows read from reviews with review_meals(*) embedded carry
+ * `review_meals`; a report saved before meals had their own table has its
+ * one meal in its own columns.
+ */
+export function reportMeals(review) {
+  const rows = review.meals ?? review.review_meals;
+  if (Array.isArray(rows) && rows.length) {
+    return [...rows].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  }
+  if (review.rating == null) return [];
+  return [{ position: 1, meal_type: review.meal_type, meal_name: review.meal_name, hechsher: review.hechsher,
+            rating: review.rating, comment: review.comment, photos: review.photos || [] }];
+}
+
+/** Every stored photo of a report row read with review_meals(photos) embedded, legacy ones included. */
+export function reportPhotoPaths(row) {
+  return [...new Set([...(row?.photos || []), ...(row?.review_meals || []).flatMap((m) => m.photos || [])])];
+}
+
 export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
+  const meals = reportMeals(review);
+  const several = meals.length > 1;
+  const only = meals[0] || {};
+  const rating = meals.length
+    ? meals.reduce((sum, m) => sum + Number(m.rating || 0), 0) / meals.length
+    : Number(review.rating) || 0;
+  const seals = [...new Set(meals.map((m) => (m.hechsher || "").trim()).filter(Boolean))];
+
   const route = [review.origin_city || review.origin_iata, review.destination_city || review.destination_iata].filter(Boolean).join(" → ");
   const tags = [
-    review.hechsher ? `<span class="tag hechsher">${esc(review.hechsher)}</span>` : "",
-    review.meal_type ? `<span class="tag">${esc(review.meal_type)}</span>` : "",
+    ...seals.map((seal) => `<span class="tag hechsher">${esc(seal)}</span>`),
+    !several && only.meal_type ? `<span class="tag">${esc(only.meal_type)}</span>` : "",
     review.cabin_class ? `<span class="tag">${esc(review.cabin_class)}</span>` : "",
     review.flight_date ? `<span class="tag">Flown ${esc(formatDate(review.flight_date))}</span>` : "",
     review.aircraft ? `<span class="tag">${esc(review.aircraft)}</span>` : ""
   ].join("");
 
-  const photos = (review.photos || [])
+  const photoPaths = meals.length ? meals.flatMap((m) => m.photos || []) : (review.photos || []);
+  const photos = photoPaths
     .map((p) => `<img src="${esc(photoUrl(p))}" alt="Photo of the meal" loading="lazy"
                       decoding="async" data-full="${esc(photoUrl(p))}">`)
     .join("");
+
+  // Several meals: one line each with its own score; the seal is repeated
+  // per meal only when the meals do not all carry the same one.
+  const mealList = several
+    ? `<ol class="meal-list">${meals.map((m, i) => `
+        <li>
+          <div class="meal-line">
+            <span class="meal-what"><b>${esc(m.meal_type || `Meal ${i + 1}`)}</b>${
+              m.meal_name ? ` ${esc(m.meal_name)}` : ""}</span>
+            <span class="meal-score">${stars(m.rating)}<span class="n">${esc(m.rating)}</span></span>
+          </div>
+          ${seals.length > 1 && m.hechsher ? `<div class="meal-seal">${esc(m.hechsher)}</div>` : ""}
+          ${m.comment ? `<p class="comment">${esc(m.comment)}</p>` : ""}
+        </li>`).join("")}</ol>`
+    : "";
 
   const scored = EXPERIENCE_SCORES.filter(({ key }) => review[key]);
   // The experience panel stands on its own: a reviewer may leave scores, a
@@ -460,23 +505,26 @@ export function reviewCard(review, { actions = "", bylineNote = "" } = {}) {
     ? airlineLogo(review.airline_iata, review.airline, review.airline_logo_url) : "";
   const operated = review.codeshare && review.operating_iata && review.operating_iata !== review.airline_iata
     ? `<div class="operated">Operated by ${esc(review.operating_iata)}</div>` : "";
+  const badge = several
+    ? `${stars(rating, { fractional: true })}
+       <div class="num">${esc(rating.toFixed(1))}<small>/5 · ${meals.length} meals</small></div>`
+    : `${stars(rating)}
+       <div class="num">${esc(rating)}<small>/5 meal</small></div>`;
 
   return `
-    <article class="review" data-id="${esc(review.id)}">
+    <article class="review${several ? " several" : ""}" data-id="${esc(review.id)}">
       <div class="review-top">
         <div>
           <div class="review-head">${logo}<h3>${esc(title || "Unknown flight")}</h3></div>
           ${operated}
           <div class="route">${esc(route)}${
-            review.meal_name ? `<span class="sep">·</span>${esc(review.meal_name)}` : ""}</div>
+            !several && only.meal_name ? `<span class="sep">·</span>${esc(only.meal_name)}` : ""}</div>
         </div>
-        <div class="score-badge">
-          ${stars(review.rating)}
-          <div class="num">${esc(review.rating)}<small>/5 meal</small></div>
-        </div>
+        <div class="score-badge">${badge}</div>
       </div>
       ${tags ? `<div class="meta">${tags}</div>` : ""}
-      ${review.comment ? `<p class="comment">${esc(review.comment)}</p>` : ""}
+      ${!several && only.comment ? `<p class="comment">${esc(only.comment)}</p>` : ""}
+      ${mealList}
       ${experience}
       ${photos ? `<div class="photos">${photos}</div>` : ""}
       <div class="byline"><b>${esc(byline)}</b>${

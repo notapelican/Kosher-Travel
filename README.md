@@ -50,15 +50,30 @@ and aircraft onto each report.
 
 ## What a rating records
 
-The form is one always-visible card for the flight, then three collapsible sections. Each
-collapsed section still summarizes itself in its header ("★★★★ · 2 photos", "1 of 2 scored ·
+A rating is one flight. The form is one always-visible card for the flight, then a
+collapsible section per meal, then two more for the experience and the byline. Each collapsed
+section still summarizes itself in its header ("★★★★ · 2 photos", "1 of 2 scored ·
 written"), so nothing you filled in is hidden from you. A required field can never be trapped
 in a closed section: submitting opens all of them first.
 
-**The meal.** A required 1–5 score, the hechsher on the seal, what it actually was, an
-optional write-up, and up to four photos of the tray — photos live here rather than at the
-bottom of the form, since they are pictures of the meal. (Airline and the city the meal was
-loaded in are required too, and sit in the flight card above.)
+**The meals.** Each meal served on the flight gets its own block: which meal it was
+(dinner, breakfast, a snack…), a required 1–5 score, the hechsher on the seal, what it
+actually was, an optional write-up, and up to four photos of the tray. One block is there to
+start; "Add another meal from this flight" adds more, up to six, and any block can be removed
+while there is more than one. (Airline and the city the meals were loaded in are required too,
+and sit in the flight card above.)
+
+On the site a one-meal report looks the same as it always did. A report with several meals
+shows the average of its meal scores in the badge ("3.5/5 · 2 meals") and lists each meal with
+its own score underneath; the hechsher filter matches a report if any of its meals carries
+that seal. The airlines page averages each report's meal average, so a traveler who ate three
+meals counts once, like everyone else.
+
+In the database the flight is a row in `reviews` and each meal a row in `review_meals`.
+Reports are written through the `save_report()` function, which saves the flight and its meals
+in one transaction under the caller's own row-level security. `reviews_public` returns one row
+per report with its meals as JSON, plus the summary columns the list pages filter and sort on.
+Reports saved before migration 005 became one-meal reports.
 
 **The travel experience** — how the airline treated you as a Jewish traveler. Entirely
 optional, and its scores and its write-up are independent: score both, score neither and just

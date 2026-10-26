@@ -1,6 +1,6 @@
 import {
   supabase, isConfigured, renderHeader, renderSetupWarning, reviewCard, enablePhotoLightbox,
-  notify, formatDate, esc, PHOTO_BUCKET, PRESETS, currentDesign, designReady, saveDesign, $
+  notify, formatDate, esc, PHOTO_BUCKET, PRESETS, currentDesign, designReady, saveDesign, reportPhotoPaths, $
 } from "./app.js";
 
 const msg = $("#admin-msg");
@@ -76,15 +76,21 @@ async function loadReviews() {
   const q = $("#a-q").value.trim();
   const visibility = $("#a-visibility").value;
 
-  let query = supabase.from("reviews").select("*").order("created_at", { ascending: false }).limit(200);
+  let query = supabase.from("reviews").select("*, review_meals(*)").order("created_at", { ascending: false }).limit(200);
   if (visibility === "visible") query = query.eq("is_hidden", false);
   if (visibility === "hidden") query = query.eq("is_hidden", true);
   if (q) {
     const term = `%${q.replace(/[,()]/g, " ")}%`;
-    query = query.or(
-      ["airline", "flight_number", "origin_city", "destination_city", "meal_name", "hechsher", "comment", "experience_notes", "author_name"]
-        .map((col) => `${col}.ilike.${term}`).join(",")
-    );
+    // meal text lives on review_meals: find those reports first
+    const { data: hits } = await supabase.from("review_meals").select("review_id")
+      .or(["meal_type", "meal_name", "hechsher", "comment"].map((col) => `${col}.ilike.${term}`).join(","))
+      .limit(500);
+    const ids = [...new Set((hits || []).map((h) => h.review_id))];
+    query = query.or([
+      ...["airline", "flight_number", "origin_city", "destination_city", "meal_name", "hechsher", "comment", "experience_notes", "author_name"]
+        .map((col) => `${col}.ilike.${term}`),
+      ...(ids.length ? [`id.in.(${ids.join(",")})`] : [])
+    ].join(","));
   }
 
   const { data, error } = await query;
@@ -123,14 +129,15 @@ list.addEventListener("click", async (event) => {
       return;
     }
     const id = remove.dataset.delete;
-    const { data: row } = await supabase.from("reviews").select("photos").eq("id", id).maybeSingle();
+    const { data: row } = await supabase.from("reviews").select("photos, review_meals(photos)").eq("id", id).maybeSingle();
     const { error } = await supabase.from("reviews").delete().eq("id", id);
     if (error) {
       notify(msg, error.message, "error");
       button.disabled = false;
       return;
     }
-    if (row?.photos?.length) await supabase.storage.from(PHOTO_BUCKET).remove(row.photos);
+    const photos = reportPhotoPaths(row);
+    if (photos.length) await supabase.storage.from(PHOTO_BUCKET).remove(photos);
   }
   await Promise.all([loadReviews(), loadUsers()]);
 });
@@ -204,9 +211,9 @@ usersBody.addEventListener("click", async (event) => {
       return;
     }
     const userId = purge.dataset.purge;
-    const { data: rows } = await supabase.from("reviews").select("photos").eq("user_id", userId);
+    const { data: rows } = await supabase.from("reviews").select("photos, review_meals(photos)").eq("user_id", userId);
     ({ error } = await supabase.from("reviews").delete().eq("user_id", userId));
-    const photos = (rows || []).flatMap((row) => row.photos || []);
+    const photos = (rows || []).flatMap(reportPhotoPaths);
     if (!error && photos.length) await supabase.storage.from(PHOTO_BUCKET).remove(photos);
   }
 

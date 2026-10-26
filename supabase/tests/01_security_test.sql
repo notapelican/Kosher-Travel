@@ -181,3 +181,73 @@ reset role;
 set local role anon;
 select 'public view shows airline_name = ' || airline_name from public.reviews_public where airline_iata = 'LY';
 rollback;
+
+\echo ''
+\echo '=== 16. save_report: a signed-in user posts one report with two meals ==='
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+select 'created report: ' || (public.save_report(
+  '{"airline":"El Al","airline_iata":"LY","flight_number":"LY 26","origin_city":"New York (JFK)","respect_score":"5"}'::jsonb,
+  '[{"meal_type":"Dinner","rating":4,"hechsher":"OU","meal_name":"Chicken"},
+    {"meal_type":"Breakfast","rating":5,"hechsher":"Badatz","photos":["22222222-2222-2222-2222-222222222222/a.jpg"]}]'::jsonb) is not null);
+select 'meals stored: ' || count(*) from public.review_meals m join public.reviews r on r.id = m.review_id where r.flight_number = 'LY 26';
+reset role;
+set local role anon;
+select 'public view: ' || meal_name || ' | avg ' || rating || ' | seals ' || array_to_string(hechshers, '+') || ' | photos ' || cardinality(photos) || ' | meals ' || jsonb_array_length(meals)
+  from public.reviews_public where flight_number = 'LY 26';
+commit;
+
+\echo ''
+\echo '=== 17. Nobody can add a meal to somebody else''s report (expect: policy violation) ==='
+select id as ly26 from public.reviews where flight_number = 'LY 26' \gset
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', true);
+insert into public.review_meals (review_id, position, rating) values (:ly26, 5, 1);
+rollback;
+
+\echo ''
+\echo '=== 18. Nobody can edit somebody else''s report through save_report (expect: not found) ==='
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', true);
+select public.save_report('{"airline":"El Al","origin_city":"Hacked"}'::jsonb, '[{"rating":1}]'::jsonb,
+  (select id from public.reviews_public where flight_number = 'LY 26'));
+rollback;
+
+\echo ''
+\echo '=== 19. Signed-out visitors cannot read the meals table; meals of hidden reports leave the view ==='
+begin;
+set local role anon;
+\echo '   -- direct read of review_meals as anon (expect: permission denied):'
+select count(*) from public.review_meals;
+rollback;
+begin;
+update public.reviews set is_hidden = true where flight_number = 'LY 26';
+set local role anon;
+select 'reports for LY 26 in the public view after hiding: ' || count(*) from public.reviews_public where flight_number = 'LY 26';
+rollback;
+
+\echo ''
+\echo '=== 20. A report needs at least one meal, and scores stay within 1-5 (expect: two errors) ==='
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+select public.save_report('{"airline":"El Al","origin_city":"JFK"}'::jsonb, '[]'::jsonb);
+rollback;
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+select public.save_report('{"airline":"El Al","origin_city":"JFK"}'::jsonb, '[{"rating":9}]'::jsonb);
+rollback;
+
+\echo ''
+\echo '=== 21. Editing your own report replaces its meals ==='
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+select 'edited report keeps its id: ' || (public.save_report('{"airline":"El Al","flight_number":"LY 26","origin_city":"New York (JFK)"}'::jsonb,
+   '[{"meal_type":"Snack","rating":3}]'::jsonb, (select id from public.reviews where flight_number = 'LY 26')) = (select id from public.reviews where flight_number = 'LY 26'));
+select 'meals after edit: ' || string_agg(m.meal_type || '/' || m.rating, ', ') from public.review_meals m join public.reviews r on r.id = m.review_id where r.flight_number = 'LY 26';
+rollback;

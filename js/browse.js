@@ -76,7 +76,7 @@ function applyFilters(query, f) {
   if (f.from) query = query.or(placeClause("origin", f.from));
   if (f.to) query = query.or(placeClause("destination", f.to));
   if (f.airline) query = query.eq("airline", f.airline);
-  if (f.hechsher) query = query.eq("hechsher", f.hechsher);
+  if (f.hechsher) query = query.contains("hechshers", [f.hechsher]);   // any meal on the report
   if (f.flight) query = query.ilike("flight_number", `%${f.flight.iata}%${f.flight.number}%`);
   else if (f.flightRaw) query = query.ilike("flight_number", `%${f.flightRaw.replace(/[%_]/g, "")}%`);
   return query;
@@ -113,7 +113,7 @@ function buildQuery(f, from, to) {
 async function loadFacets() {
   const [{ data }, airlines] = await Promise.all([
     supabase.from("reviews_public")
-      .select("rating, airline, hechsher, origin_city, destination_city, origin_iata, destination_iata, created_at")
+      .select("rating, airline, hechshers, origin_city, destination_city, origin_iata, destination_iata, created_at")
       .order("created_at", { ascending: false }).limit(5000),
     loadAirlines()
   ]);
@@ -121,7 +121,7 @@ async function loadFacets() {
   const inReviews = new Set(rows.map((r) => (r.airline || "").trim()).filter(Boolean));
   const names = [...new Set([...airlines.map((a) => a.name), ...inReviews])].sort((a, b) => a.localeCompare(b));
   fillSelect($("#f-airline"), names, "Any airline");
-  const hechsherim = [...new Set(rows.map((r) => (r.hechsher || "").trim()).filter(Boolean))].sort();
+  const hechsherim = [...new Set(rows.flatMap((r) => r.hechshers || []).map((h) => h.trim()).filter(Boolean))].sort();
   fillSelect($("#f-hechsher"), hechsherim, "Any hechsher");
   for (const sel of [$("#f-airline"), $("#f-hechsher")]) {
     if (sel.dataset.pending && [...sel.options].some((o) => o.value === sel.dataset.pending)) sel.value = sel.dataset.pending;

@@ -35,6 +35,12 @@ fail say so in their heading — an `ERROR: new row violates row-level security 
 13. Anyone can read airlines and flights; only the service role writes flights
 14. Everyone reads site settings; only an admin writes them
 15. A review posted with an airline code gets the airline name filled in
+16. `save_report` stores one report with several meals; the public view shows them
+17. Nobody can add a meal to somebody else's report
+18. Nobody can edit somebody else's report through `save_report`
+19. Signed-out visitors cannot read the meals table; meals of hidden reports leave the view
+20. A report needs at least one meal, and meal scores stay within 1–5
+21. Editing your own report replaces its meals
 
 The last one matters: bylines are set by a database trigger, not by the browser, so a crafted
 API call cannot post under someone else's name.

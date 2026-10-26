@@ -1,6 +1,6 @@
 import {
   supabase, isConfigured, renderHeader, renderSetupWarning,
-  openAuthDialog, reviewCard, enablePhotoLightbox, notify, emptyState, PHOTO_BUCKET, $
+  openAuthDialog, reviewCard, enablePhotoLightbox, notify, emptyState, PHOTO_BUCKET, reportPhotoPaths, $
 } from "./app.js";
 
 const list = $("#reviews");
@@ -44,7 +44,7 @@ async function saveName(event) {
 async function load() {
   const { data, error } = await supabase
     .from("reviews")
-    .select("*")
+    .select("*, review_meals(*)")
     .eq("user_id", profile.id)
     .order("created_at", { ascending: false });
 
@@ -67,13 +67,14 @@ list.addEventListener("click", async (event) => {
   if (!confirm("Delete this rating? This cannot be undone.")) return;
 
   button.disabled = true;
-  const { data: row } = await supabase.from("reviews").select("photos").eq("id", id).maybeSingle();
+  const { data: row } = await supabase.from("reviews").select("photos, review_meals(photos)").eq("id", id).maybeSingle();
   const { error } = await supabase.from("reviews").delete().eq("id", id);
   if (error) {
     button.disabled = false;
     return notify(msg, error.message, "error");
   }
-  if (row?.photos?.length) await supabase.storage.from(PHOTO_BUCKET).remove(row.photos);
+  const photos = reportPhotoPaths(row);
+  if (photos.length) await supabase.storage.from(PHOTO_BUCKET).remove(photos);
   notify(msg, "Rating deleted.", "ok");
   await load();
 });
