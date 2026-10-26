@@ -42,6 +42,7 @@ fail say so in their heading — an `ERROR: new row violates row-level security 
 20. A report needs at least one meal, and meal scores stay within 1–5
 21. Editing your own report replaces its meals
 22. Caterer and diets are saved per meal; a diet the site does not know is refused
+23. A report lists the diets of all its meals, so it is found under each one
 
 The last one matters: bylines are set by a database trigger, not by the browser, so a crafted
 API call cannot post under someone else's name.

@@ -686,7 +686,11 @@ create view public.reviews_public as
          r.respect_score, r.kosher_care_score, r.experience_notes,
          r.author_name, r.is_anonymous, r.created_at,
          f.origin_iata, f.destination_iata, f.operating_iata, f.codeshare, f.aircraft,
-         a.name as airline_name, a.logo_url as airline_logo_url
+         a.name as airline_name, a.logo_url as airline_logo_url,
+         -- every diet any meal on the report is marked with, for the diet filter
+         coalesce((select array_agg(distinct d order by d)
+                   from public.review_meals rm, unnest(rm.diets) d
+                   where rm.review_id = r.id), '{}')                                  as diets
   from public.reviews r
   left join m on m.review_id = r.id
   left join public.flights f on f.id = r.flight_id

@@ -104,8 +104,10 @@ friendly. The form shows them as tappable chips with an icon each; reports show 
 picked, with the same icons. The list, labels and icons are `DIETS` in
 [`js/options.js`](js/options.js); the database accepts only those keys
 (`review_meals_diets_check`), so a new diet goes in both places. The home page's Diet filter
-opens the same chips; picking several finds reports with a meal marked as all of them (so
-"gluten free" + "tree-nut free" needs one meal that is both, not one of each).
+opens the same chips and finds a report if any of its meals is marked with any diet picked, so
+a report with a gluten-free meal and a vegetarian one shows up under each. A diet also finds the
+stricter ones that include it: "Gluten free" finds coeliac-safe meals, and "Vegetarian", "Dairy
+free" and "Egg free" find vegan ones. It filters on `reviews_public.diets` (migration 007).
 
 **Lists stay compact.** In a list, a long report is cut to a fixed height and faded, with a
 **More** link to the whole report, and shows at most four photos (the last one says "+N" when

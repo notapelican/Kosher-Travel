@@ -80,13 +80,23 @@ function placeClause(col, value) {
   return parts.join(",");
 }
 
+/**
+ * A diet also matches the stricter ones that include it: a coeliac-safe meal
+ * is gluten free, and a vegan meal is vegetarian, dairy free and egg free.
+ */
+function withImpliedDiets(keys) {
+  // inside the function: a link with ?diet= searches before module constants below the call are set
+  const impliedBy = { gluten_free: ["coeliac"], vegetarian: ["vegan"], dairy_free: ["vegan"], egg_free: ["vegan"] };
+  return [...new Set(keys.flatMap((key) => [key, ...(impliedBy[key] || [])]))];
+}
+
 function applyFilters(query, f) {
   if (f.from) query = query.or(placeClause("origin", f.from));
   if (f.to) query = query.or(placeClause("destination", f.to));
   if (f.airline) query = query.eq("airline", f.airline);
   if (f.hechsher) query = query.contains("hechshers", [f.hechsher]);   // any meal on the report
-  // some meal on the report is marked as every diet picked (jsonb containment on the meals list)
-  if (f.diets?.length) query = query.filter("meals", "cs", JSON.stringify([{ diets: f.diets }]));
+  // any of the diets picked, on any meal of the report
+  if (f.diets?.length) query = query.overlaps("diets", withImpliedDiets(f.diets));
   if (f.flight) query = query.ilike("flight_number", `%${f.flight.iata}%${f.flight.number}%`);
   else if (f.flightRaw) query = query.ilike("flight_number", `%${f.flightRaw.replace(/[%_]/g, "")}%`);
   return query;
@@ -281,9 +291,8 @@ async function reload() {
  * on Newest, each loaded batch lists its photo reports first; on the score
  * sorts, photo reports come first among reports with the same score.
  */
-const SORT_COLUMN = { best: "rating", worst: "rating", respect: "respect_score", care: "kosher_care_score" };
 function preferPhotos(rows, sortKey) {
-  const column = SORT_COLUMN[sortKey];
+  const column = { best: "rating", worst: "rating", respect: "respect_score", care: "kosher_care_score" }[sortKey];
   // rows arrive sorted, so equal scores are next to each other: number the runs
   let group = 0;
   const keyed = rows.map((r, i) => {
@@ -303,7 +312,11 @@ async function loadPage(f = filters()) {
   const { data, error, count } = await buildQuery(f, from, from + PAGE_SIZE - 1);
   loading = false;
   moreBtn.disabled = false;
-  if (error) return notify(msg, `Could not load ratings: ${error.message}`, "error");
+  if (error) {
+    // the diet filter needs migration 007; say so instead of a raw database error
+    if (f.diets?.length && /diets/.test(error.message)) return notify(msg, "The diet filter needs a database update (migration 007) before it works.", "error");
+    return notify(msg, `Could not load ratings: ${error.message}`, "error");
+  }
 
   const rows = preferPhotos(exactFlight(data || [], f), f.sort);
   if (page === 0) { total = f.flight ? rows.length : (count ?? rows.length); firstPage = rows; renderFeatured(); }
@@ -326,7 +339,7 @@ function renderCount(f) {
   bits.push(f.flight ? esc(f.flight.display) : "any flight");
   bits.push(f.airline ? esc(f.airline) : `${aggregate(routeRows).length || "all"} airline${aggregate(routeRows).length === 1 ? "" : "s"}`);
   bits.push(f.hechsher ? esc(f.hechsher) : "any hechsher");
-  if (f.diets.length) bits.push(esc(f.diets.map((key) => DIETS.find((d) => d.key === key)?.label || key).join(" + ").toLowerCase()));
+  if (f.diets.length) bits.push(esc(f.diets.map((key) => DIETS.find((d) => d.key === key)?.label || key).join(" or ").toLowerCase()));
   countEl.innerHTML = `<b>${total} report${total === 1 ? "" : "s"}</b> ${bits.join(" · ")}`;
   countEl.hidden = false;
 }

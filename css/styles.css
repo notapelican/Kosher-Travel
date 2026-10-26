@@ -1249,4 +1249,7 @@ dialog.sheet::backdrop { background: rgba(8, 10, 12, .5); backdrop-filter: blur(
   color: var(--muted);
 }
 .site-footer p { max-width: 70ch; }
+.site-footer .powered { max-width: none; margin: var(--sp-3) 0 0; font-size: 12px; letter-spacing: .02em; }
+.site-footer .powered a { color: inherit; font-weight: 700; letter-spacing: .08em; text-decoration: none; }
+.site-footer .powered a:hover { color: var(--accent); }
 @media (min-width: 860px) { .site-footer { padding-bottom: var(--sp-7); } }

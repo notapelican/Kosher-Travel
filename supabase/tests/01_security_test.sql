@@ -268,3 +268,18 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
 select public.save_report('{"airline":"El Al","origin_city":"JFK"}'::jsonb, '[{"rating":4,"diets":["carnivore"]}]'::jsonb);
 rollback;
+
+\echo ''
+\echo '=== 23. A report lists every diet of every meal, so each diet finds it ==='
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
+select public.save_report('{"airline":"El Al","flight_number":"LY 5","origin_city":"New York (JFK)"}'::jsonb,
+  '[{"rating":4,"diets":["gluten_free","vegetarian"]},{"rating":3,"diets":["nut_free"]}]'::jsonb);
+set local role anon;
+select 'diets on LY 5: ' || array_to_string(diets, ', ') from public.reviews_public where flight_number = 'LY 5';
+select 'found by gluten_free: ' || exists(select 1 from public.reviews_public where flight_number = 'LY 5' and diets && array['gluten_free'])
+    || ' | by vegetarian: ' || exists(select 1 from public.reviews_public where flight_number = 'LY 5' and diets && array['vegetarian'])
+    || ' | by nut_free: ' || exists(select 1 from public.reviews_public where flight_number = 'LY 5' and diets && array['nut_free'])
+    || ' | by vegan: ' || exists(select 1 from public.reviews_public where flight_number = 'LY 5' and diets && array['vegan']);
+rollback;
