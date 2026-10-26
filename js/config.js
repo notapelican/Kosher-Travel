@@ -9,7 +9,7 @@ export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // leave it empty to fall back to the redirect flow, which shows the Supabase
 // project address instead. Use the same OAuth client ID that is configured in
 // Supabase under Authentication -> Providers -> Google.
-export const GOOGLE_CLIENT_ID = "";
+export const GOOGLE_CLIENT_ID = "345218615767-6qr479cj136j4ras9j9a1f8cer8d7vro.apps.googleusercontent.com";
 
 // Shown in page titles and the footer.
 export const SITE_NAME = "Kosher Travel";
