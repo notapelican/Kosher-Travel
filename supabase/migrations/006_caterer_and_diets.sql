@@ -4,7 +4,9 @@
 -- on the box (Regal, Lewis', ...) and the diets the meal was suitable for
 -- (vegetarian, gluten free, peanut free, ...). The allowed diet keys are
 -- checked here and must match DIETS in js/options.js. Rebuilds the public
--- view and save_report() to carry both. Safe to re-run. Run after 005.
+-- view and save_report() to carry both (the view includes the diets list
+-- from 007, so running these two in either order ends the same). Safe to
+-- re-run. Run after 005.
 
 alter table public.review_meals add column if not exists caterer text;
 alter table public.review_meals add column if not exists diets text[] not null default '{}';
@@ -58,7 +60,11 @@ create view public.reviews_public as
          r.respect_score, r.kosher_care_score, r.experience_notes,
          r.author_name, r.is_anonymous, r.created_at,
          f.origin_iata, f.destination_iata, f.operating_iata, f.codeshare, f.aircraft,
-         a.name as airline_name, a.logo_url as airline_logo_url
+         a.name as airline_name, a.logo_url as airline_logo_url,
+         -- every diet any meal on the report is marked with, for the diet filter
+         coalesce((select array_agg(distinct d order by d)
+                   from public.review_meals rm, unnest(rm.diets) d
+                   where rm.review_id = r.id), '{}')                                  as diets
   from public.reviews r
   left join m on m.review_id = r.id
   left join public.flights f on f.id = r.flight_id

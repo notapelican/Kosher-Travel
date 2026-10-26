@@ -3,10 +3,27 @@
 -- reviews_public gains a diets column: every diet any of the report's meals
 -- is marked with. The home page filters on it the same way it filters on
 -- hechshers, so a report with a gluten-free meal and a vegetarian meal shows
--- up under each. Adds a column to the end of the view and changes nothing
--- else. Safe to re-run. Run after 006.
+-- up under each.
+--
+-- This file also contains everything in migration 006 (each meal's caterer
+-- and diets, and save_report() writing them), so it works whether or not 006
+-- was run. Safe to re-run. Run after 005.
 
-create or replace view public.reviews_public as
+alter table public.review_meals add column if not exists caterer text;
+alter table public.review_meals add column if not exists diets text[] not null default '{}';
+alter table public.review_meals drop constraint if exists review_meals_diets_check;
+alter table public.review_meals add constraint review_meals_diets_check check (diets <@ array[
+  'vegetarian', 'vegan', 'gluten_free', 'coeliac', 'peanut_free', 'nut_free',
+  'dairy_free', 'egg_free', 'sesame_free', 'diabetic'
+]::text[]);
+create index if not exists review_meals_caterer_idx on public.review_meals (caterer);
+
+-- The public view: one row per report, with its meals as JSON and summary
+-- columns (average score, seals, all photos) the list pages filter and sort on.
+-- A report with no meal rows (written by an old copy of the page) falls back
+-- to its own meal columns.
+drop view if exists public.reviews_public;
+create view public.reviews_public as
   with m as (
     select review_id,
            jsonb_agg(jsonb_build_object(
@@ -56,3 +73,92 @@ create or replace view public.reviews_public as
   where not r.is_hidden;
 
 grant select on public.reviews_public to anon, authenticated;
+
+-- Saves a report and its meals together. With report_id null it creates a
+-- report for the caller; with an id it updates that report (the caller's own,
+-- or any if admin) and replaces its meals. Runs with the caller's rights, so
+-- every row-level security rule above still applies.
+create or replace function public.save_report(report jsonb, meals jsonb, report_id bigint default null)
+returns bigint
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  rid bigint;
+  meal jsonb;
+  n int := 0;
+  txt constant text[] := array['airline','airline_iata','flight_number','origin_city','destination_city','cabin_class','experience_notes'];
+begin
+  if jsonb_typeof(meals) is distinct from 'array' or jsonb_array_length(meals) = 0 then
+    raise exception 'A report needs at least one meal.';
+  end if;
+  if jsonb_array_length(meals) > 6 then
+    raise exception 'A report can have at most six meals.';
+  end if;
+  if nullif(trim(report->>'airline'), '') is null or nullif(trim(report->>'origin_city'), '') is null then
+    raise exception 'Airline and the city the meal was loaded in are required.';
+  end if;
+
+  if report_id is null then
+    insert into reviews (user_id, airline, airline_iata, flight_id, flight_number, origin_city,
+                         destination_city, flight_date, cabin_class, respect_score,
+                         kosher_care_score, experience_notes, is_anonymous)
+    values (auth.uid(),
+            trim(report->>'airline'),
+            nullif(trim(report->>'airline_iata'), ''),
+            nullif(report->>'flight_id', '')::bigint,
+            nullif(trim(report->>'flight_number'), ''),
+            trim(report->>'origin_city'),
+            nullif(trim(report->>'destination_city'), ''),
+            nullif(report->>'flight_date', '')::date,
+            nullif(trim(report->>'cabin_class'), ''),
+            nullif(report->>'respect_score', '')::smallint,
+            nullif(report->>'kosher_care_score', '')::smallint,
+            nullif(trim(report->>'experience_notes'), ''),
+            coalesce((report->>'is_anonymous')::boolean, false))
+    returning id into rid;
+  else
+    update reviews set
+      airline           = trim(report->>'airline'),
+      airline_iata      = nullif(trim(report->>'airline_iata'), ''),
+      flight_id         = nullif(report->>'flight_id', '')::bigint,
+      flight_number     = nullif(trim(report->>'flight_number'), ''),
+      origin_city       = trim(report->>'origin_city'),
+      destination_city  = nullif(trim(report->>'destination_city'), ''),
+      flight_date       = nullif(report->>'flight_date', '')::date,
+      cabin_class       = nullif(trim(report->>'cabin_class'), ''),
+      respect_score     = nullif(report->>'respect_score', '')::smallint,
+      kosher_care_score = nullif(report->>'kosher_care_score', '')::smallint,
+      experience_notes  = nullif(trim(report->>'experience_notes'), ''),
+      is_anonymous      = coalesce((report->>'is_anonymous')::boolean, false),
+      -- the old single-meal columns are superseded by review_meals
+      rating = null, meal_type = null, meal_name = null, hechsher = null, comment = null, photos = '{}'
+    where id = report_id
+    returning id into rid;
+    if rid is null then
+      raise exception 'That report was not found, or it is not yours to edit.';
+    end if;
+    delete from review_meals where review_id = rid;
+  end if;
+
+  for meal in select value from jsonb_array_elements(meals) loop
+    n := n + 1;
+    insert into review_meals (review_id, position, meal_type, meal_name, hechsher, caterer, diets, rating, comment, photos)
+    values (rid, n,
+            nullif(trim(meal->>'meal_type'), ''),
+            nullif(trim(meal->>'meal_name'), ''),
+            nullif(trim(meal->>'hechsher'), ''),
+            nullif(trim(meal->>'caterer'), ''),
+            coalesce(array(select distinct d from jsonb_array_elements_text(coalesce(meal->'diets', '[]'::jsonb)) d order by d), '{}'),
+            (meal->>'rating')::smallint,
+            nullif(trim(meal->>'comment'), ''),
+            coalesce(array(select jsonb_array_elements_text(coalesce(meal->'photos', '[]'::jsonb))), '{}'));
+  end loop;
+
+  return rid;
+end;
+$$;
+
+revoke execute on function public.save_report(jsonb, jsonb, bigint) from public, anon;
+grant execute on function public.save_report(jsonb, jsonb, bigint) to authenticated;
