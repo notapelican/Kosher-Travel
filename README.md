@@ -42,7 +42,7 @@ chosen for good, the others can be deleted from those two files and nothing else
 
 ## Flights and airlines
 
-The home page searches by From, To, flight number, airline and hechsher. Airlines come from the
+The home page searches by From, To, flight number, airline, hechsher and diet. Airlines come from the
 `airlines` table (seeded with IATA codes; logos from `logo_url` or a public CDN keyed by code,
 falling back to the code in a tile). Flight numbers are checked against the `flight-lookup`
 Edge Function (setup step 6): a search for a real flight with no reports yet gets a "flown it?
@@ -103,7 +103,9 @@ coeliac safe, peanut free, tree-nut free, dairy free, egg free, sesame free and 
 friendly. The form shows them as tappable chips with an icon each; reports show the ones
 picked, with the same icons. The list, labels and icons are `DIETS` in
 [`js/options.js`](js/options.js); the database accepts only those keys
-(`review_meals_diets_check`), so a new diet goes in both places.
+(`review_meals_diets_check`), so a new diet goes in both places. The home page's Diet filter
+opens the same chips; picking several finds reports with a meal marked as all of them (so
+"gluten free" + "tree-nut free" needs one meal that is both, not one of each).
 
 **Each report has its own page**, `review.html?id=…`. Clicking anywhere on a card, in any list
 and any design, opens it (Ctrl/Cmd-click opens a new tab; Edit and Delete buttons keep their

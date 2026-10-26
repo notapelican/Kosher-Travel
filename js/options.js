@@ -40,6 +40,7 @@ export const HECHSHERIM = [
   "Kehilla Kosher (Los Angeles)",
   "KLBD (London Beth Din)",
   "Kof-K",
+  "Kosher Australia (Australia)",
   "Kosher Kiwi (New Zealand)",
   "Kosher SA (South Africa)",
   "Machpud / Yoreh Deah",

@@ -55,6 +55,18 @@
       <div><label for="f-flight">Flight</label><input id="f-flight" class="code" placeholder="LY 26" autocomplete="off" maxlength="8"></div>
       <div><label for="f-airline">Airline</label><select id="f-airline"><option value="">Any airline</option></select></div>
       <div><label for="f-hechsher">Hechsher</label><select id="f-hechsher"><option value="">Any hechsher</option></select></div>
+      <div class="diet-field">
+        <label id="f-diet-label" for="f-diet">Diet</label>
+        <button type="button" id="f-diet" class="diet-btn" aria-haspopup="true" aria-expanded="false" aria-controls="f-diet-pop">Any diet</button>
+        <div class="diet-pop" id="f-diet-pop" role="group" aria-labelledby="f-diet-label" hidden>
+          <div class="diet-chips" id="f-diet-chips"></div>
+          <div class="diet-pop-foot">
+            <span class="hint">A meal marked as every diet picked</span>
+            <button type="button" class="small ghost" id="f-diet-clear">Clear</button>
+            <button type="button" class="small primary" id="f-diet-done">Done</button>
+          </div>
+        </div>
+      </div>
       <div class="go"><button type="submit" class="primary">Find meals</button></div>
     </form>
     <div class="sort-chips" id="sort" role="group" aria-label="Sort">

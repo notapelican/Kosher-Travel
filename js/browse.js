@@ -3,7 +3,7 @@ import {
   notify, fillSelect, emptyState, airlineLogo, loadAirlines, lookupFlight, parseFlightNumber,
   currentDesign, photoUrl, reviewHref, formatDate, timeAgo, stars, esc, LOGO, $, $$
 } from "./app.js";
-import { EXPERIENCE_SCORES } from "./options.js";
+import { EXPERIENCE_SCORES, DIETS, dietIcon } from "./options.js";
 import { airportPicker } from "./airports.js";
 
 const PAGE_SIZE = 18;
@@ -40,12 +40,16 @@ if (!isConfigured) {
 /* ------------------------------------------------------------------ filters */
 
 function readUrl() {
+  renderDietChips();
   const p = new URLSearchParams(location.search);
   for (const key of ["from", "to", "flight"]) if (p.get(key)) $(`#f-${key}`).value = p.get(key);
   if (p.get("airline")) $("#f-airline").dataset.pending = p.get("airline");
   if (p.get("hechsher")) $("#f-hechsher").dataset.pending = p.get("hechsher");
   if (p.get("q")) $("#f-airline").dataset.pending = p.get("q");     // old deep links
   if (p.get("sort")) setSort(p.get("sort"), false);
+  const diets = (p.get("diet") || "").split(",");
+  for (const box of $$("#f-diet-chips input")) box.checked = diets.includes(box.value);
+  labelDietButton();
 }
 
 function filters() {
@@ -56,6 +60,7 @@ function filters() {
     flightRaw: $("#f-flight").value.trim(),
     airline: $("#f-airline").value,
     hechsher: $("#f-hechsher").value,
+    diets: $$("#f-diet-chips input:checked").map((box) => box.value),
     sort
   };
 }
@@ -80,6 +85,8 @@ function applyFilters(query, f) {
   if (f.to) query = query.or(placeClause("destination", f.to));
   if (f.airline) query = query.eq("airline", f.airline);
   if (f.hechsher) query = query.contains("hechshers", [f.hechsher]);   // any meal on the report
+  // some meal on the report is marked as every diet picked (jsonb containment on the meals list)
+  if (f.diets?.length) query = query.filter("meals", "cs", JSON.stringify([{ diets: f.diets }]));
   if (f.flight) query = query.ilike("flight_number", `%${f.flight.iata}%${f.flight.number}%`);
   else if (f.flightRaw) query = query.ilike("flight_number", `%${f.flightRaw.replace(/[%_]/g, "")}%`);
   return query;
@@ -265,6 +272,8 @@ async function reload() {
   missEl.hidden = true;
   const f = filters();
   await Promise.all([loadPage(f), loadRouteBlock(f)]);
+  // the count names how many airlines the route block found, so redraw it once both are in
+  if (!countEl.hidden) renderCount(f);
 }
 
 async function loadPage(f = filters()) {
@@ -299,6 +308,7 @@ function renderCount(f) {
   bits.push(f.flight ? esc(f.flight.display) : "any flight");
   bits.push(f.airline ? esc(f.airline) : `${aggregate(routeRows).length || "all"} airline${aggregate(routeRows).length === 1 ? "" : "s"}`);
   bits.push(f.hechsher ? esc(f.hechsher) : "any hechsher");
+  if (f.diets.length) bits.push(esc(f.diets.map((key) => DIETS.find((d) => d.key === key)?.label || key).join(" + ").toLowerCase()));
   countEl.innerHTML = `<b>${total} report${total === 1 ? "" : "s"}</b> ${bits.join(" · ")}`;
   countEl.hidden = false;
 }
@@ -326,6 +336,48 @@ async function renderMiss(f) {
     missEl.textContent = result.reason || `${f.flight.display} does not seem to be a current flight. Check the number.`;
   }
 }
+
+/* -------------------------------------------------------------- diet filter */
+
+// The diet picker is a button that opens the same icon chips the rating form
+// uses. Ticking a chip searches straight away, like the other filters.
+function renderDietChips() {
+  $("#f-diet-chips").innerHTML = DIETS.map((d) => `
+    <label class="diet-chip"><input type="checkbox" value="${d.key}" class="sr-only">${dietIcon(d.key)}<span>${esc(d.label)}</span></label>`).join("");
+}
+
+function labelDietButton() {
+  const picked = DIETS.filter((d) => $(`#f-diet-chips input[value="${d.key}"]`)?.checked);
+  const button = $("#f-diet");
+  button.innerHTML = picked.length
+    ? `${dietIcon(picked[0].key, { size: 16 })}<span>${esc(picked[0].label)}${picked.length > 1 ? ` +${picked.length - 1}` : ""}</span>`
+    : `<span>Any diet</span>`;
+  button.classList.toggle("is-set", picked.length > 0);
+}
+
+function openDietPop(open) {
+  const pop = $("#f-diet-pop");
+  pop.hidden = !open;
+  $("#f-diet").setAttribute("aria-expanded", String(open));
+  if (!open) return;
+  pop.classList.remove("flip");
+  if (pop.getBoundingClientRect().right > document.documentElement.clientWidth - 8) pop.classList.add("flip");
+  pop.querySelector("input")?.focus();
+}
+$("#f-diet").addEventListener("click", () => openDietPop($("#f-diet-pop").hidden));
+$("#f-diet-done").addEventListener("click", () => { openDietPop(false); $("#f-diet").focus(); });
+$("#f-diet-clear").addEventListener("click", () => {
+  for (const box of $$("#f-diet-chips input")) box.checked = false;
+  labelDietButton();
+  form.dispatchEvent(new Event("input"));
+});
+$("#f-diet-chips").addEventListener("change", labelDietButton);
+document.addEventListener("click", (event) => {
+  if (!$("#f-diet-pop").hidden && !event.target.closest(".diet-field")) openDietPop(false);
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !$("#f-diet-pop").hidden) { openDietPop(false); $("#f-diet").focus(); }
+});
 
 /* ------------------------------------------------------------------ events */
 
